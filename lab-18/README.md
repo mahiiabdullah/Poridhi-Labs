@@ -16,26 +16,43 @@ A Flask application with one POST endpoint that starts a background task and ret
 
 Install Flask inside a project-local virtual environment so the dependency stays isolated from the system Python.
 
-### Step 1: Create and activate a virtual environment
+### Step 1: Create the virtual environment
 
 ```bash
 python -m venv venv
+```
+
+### Step 2: Activate the virtual environment
+
+```bash
 source venv/bin/activate
 ```
 
-### Step 2: Install Flask
+After activation, the shell prompt is prefixed with `(venv)`, for example:
+
+```
+(venv) poridhian@93b22aeb7c884c2b:~$
+```
+
+If you do not see `(venv)` in the prompt, the venv is not active. Run the `source venv/bin/activate` command again.
+
+### Step 3: Install Flask
 
 ```bash
 pip install flask
 ```
 
-### Step 3: Deactivate when finished
-
-Run this command at the end of the lab to leave the virtual environment:
+Confirm Flask is installed inside the active venv:
 
 ```bash
-deactivate
+python -c "import flask; print(flask.__version__)"
 ```
+
+The output should be a version string like `3.0.3`. If you see `ModuleNotFoundError: No module named 'flask'`, the venv is not active — go back to Step 2.
+
+![](./images/Flask%20Install.png)
+
+Keep the virtual environment active for the rest of the lab.
 
 ## Step 4: Create the background task file
 
@@ -109,7 +126,7 @@ ls
 python app.py
 ```
 
-![](./images/output-1.png)
+![](./images/python_app_py.png)
 
 ## Step 8: Check the health endpoint
 
@@ -119,7 +136,7 @@ Open a second terminal in Puku CLI and run:
 curl http://127.0.0.1:5000/
 ```
 
-![](./images/output-2.png)
+![](./images/Testing.png)
 
 ## Step 9: Trigger a background task
 
@@ -131,7 +148,7 @@ curl -X POST http://127.0.0.1:5000/tasks \
   -d '{"duration": 5}'
 ```
 
-![](./images/output-3.png)
+![](./images/Duration_5.png)
 
 The response arrives in milliseconds. The terminal from Step 7 keeps printing progress messages for the next 5 seconds.
 
