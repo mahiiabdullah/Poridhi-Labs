@@ -12,11 +12,32 @@ This lab teaches the simplest possible background-task pattern using Flask and P
 
 A Flask application with one POST endpoint that starts a background task and returns a response without waiting for the task to finish.
 
-## Step 1: Open the project in Puku CLI
+## Installation
 
-Open the project folder in Puku CLI. Run all commands in its integrated terminal. Keep this file open in the Markdown preview while you work.
+Install Flask inside a project-local virtual environment so the dependency stays isolated from the system Python.
 
-## Step 2: Create the background task file
+### Step 1: Create and activate a virtual environment
+
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+### Step 2: Install Flask
+
+```bash
+pip install flask
+```
+
+### Step 3: Deactivate when finished
+
+Run this command at the end of the lab to leave the virtual environment:
+
+```bash
+deactivate
+```
+
+## Step 4: Create the background task file
 
 Run this command to create `tasks.py`:
 
@@ -35,7 +56,7 @@ def run_background_task(task_id: str, duration: int = 5) -> None:
 EOF
 ```
 
-## Step 3: Create the Flask application
+## Step 5: Create the Flask application
 
 Run this command to create `app.py`:
 
@@ -76,13 +97,13 @@ if __name__ == "__main__":
 EOF
 ```
 
-## Step 4: Verify the files
+## Step 6: Verify the files
 
 ```bash
 ls
 ```
 
-## Step 5: Start the Flask server
+## Step 7: Start the Flask server
 
 ```bash
 python app.py
@@ -90,7 +111,7 @@ python app.py
 
 ![](./images/output-1.png)
 
-## Step 6: Check the health endpoint
+## Step 8: Check the health endpoint
 
 Open a second terminal in Puku CLI and run:
 
@@ -100,7 +121,7 @@ curl http://127.0.0.1:5000/
 
 ![](./images/output-2.png)
 
-## Step 7: Trigger a background task
+## Step 9: Trigger a background task
 
 Send a POST request with a duration of 5 seconds:
 
@@ -112,9 +133,9 @@ curl -X POST http://127.0.0.1:5000/tasks \
 
 ![](./images/output-3.png)
 
-The response arrives in milliseconds. The terminal from Step 5 keeps printing progress messages for the next 5 seconds.
+The response arrives in milliseconds. The terminal from Step 7 keeps printing progress messages for the next 5 seconds.
 
-## Step 8: Trigger three tasks in parallel
+## Step 10: Trigger three tasks in parallel
 
 Send three requests quickly with different durations:
 
@@ -128,13 +149,13 @@ curl -X POST http://127.0.0.1:5000/tasks -H "Content-Type: application/json" -d 
 
 All three responses return immediately. The terminal shows three tasks running in parallel and finishing at different times.
 
-## Step 9: Test the same flow with Postman
+## Step 11: Test the same flow with Postman
 
 Open Postman on your host machine. Create a new POST request to `http://<VM-IP>:5000/tasks` with header `Content-Type: application/json` and body `{"duration": 5}`. Click Send and confirm the response returns in milliseconds.
 
 <p align="center"><img src="./images/postman.png" alt="Postman POST /tasks returning 202 immediately"></p>
 
-## Step 10: Stop the server
+## Step 12: Stop the server
 
 Press `Ctrl+C` in the terminal running Flask.
 
