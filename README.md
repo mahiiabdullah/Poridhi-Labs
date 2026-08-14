@@ -86,13 +86,19 @@ pip install flask
 
 > ⚠️ **Important:** Do NOT type `python` alone — that opens the interactive REPL (`>>>`). You need to create a file, then run it.
 
-Create a file named `tasks.py` inside the VM using a text editor (or `nano`):
+We'll use the simplest possible method that works in any terminal — a shell heredoc. Run this single command in the VM and paste the code at the end:
 
 ```bash
-nano tasks.py
+cat > tasks.py << 'EOF'
 ```
 
-Paste the following code into the editor, then save (in `nano`: `Ctrl+O`, `Enter`, `Ctrl+X`):
+Paste the code below, then on a new line type:
+
+```
+EOF
+```
+
+and press **Enter**. The shell will write everything between the two `EOF` markers into `tasks.py`.
 
 ```python
 # tasks.py
@@ -117,13 +123,13 @@ def run_background_task(task_id: str, duration: int = 5) -> None:
 
 ### Step 3 — Create the Flask application
 
-Create another file named `app.py`:
+Use the same heredoc trick for `app.py`:
 
 ```bash
-nano app.py
+cat > app.py << 'EOF'
 ```
 
-Paste the following code into the editor, then save (`Ctrl+O`, `Enter`, `Ctrl+X`):
+Paste the following code, then on a new line type `EOF` and press **Enter**:
 
 ```python
 # app.py
@@ -196,6 +202,8 @@ python app.py
 ```
 
 > ⚠️ Use `python app.py` (with the filename). Typing just `python` opens the REPL and your code won't be saved to a file.
+
+> 💡 **Tip:** If your VM doesn't have `nano`, the heredoc method above works in any bash shell. If you'd rather use an editor and `nano` is missing, try `vi app.py` (press `i` to insert, paste, then `Esc` → `:wq` → `Enter` to save).
 
 **📷 Screenshot 1 — Flask app running**
 
