@@ -166,13 +166,7 @@ curl -X POST http://127.0.0.1:5000/tasks -H "Content-Type: application/json" -d 
 
 All three responses return immediately. The terminal shows three tasks running in parallel and finishing at different times.
 
-## Step 11: Test the same flow with Postman
-
-Open Postman on your host machine. Create a new POST request to `http://<VM-IP>:5000/tasks` with header `Content-Type: application/json` and body `{"duration": 5}`. Click Send and confirm the response returns in milliseconds.
-
-<p align="center"><img src="./images/postman.png" alt="Postman POST /tasks returning 202 immediately"></p>
-
-## Step 12: Stop the server
+## Step 11: Stop the server
 
 Press `Ctrl+C` in the terminal running Flask.
 
