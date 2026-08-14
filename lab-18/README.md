@@ -6,17 +6,11 @@ This lab teaches the simplest possible background-task pattern using Flask and P
 
 ## Architecture
 
-<p align="center"><img src="./assets/diagrams/architecture.svg" alt="Lab 18 Architecture"></p>
+<p align="center"><img src="./images/architecture.svg" alt="Lab 18 Architecture"></p>
 
 ## What You Will Build
 
 A Flask application with one POST endpoint that starts a background task and returns a response without waiting for the task to finish.
-
-## Prerequisites
-
-- Python 3.10 or higher.
-- Flask installed via `pip install flask`.
-- Postman or `curl` for testing.
 
 ## Step 1: Open the project in Puku CLI
 
