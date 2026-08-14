@@ -142,13 +142,6 @@ Open Postman on your host machine. Create a new POST request to `http://<VM-IP>:
 
 Press `Ctrl+C` in the terminal running Flask.
 
-## Checkpoint
-
-- [ ] `python app.py` starts Flask and binds to port 5000
-- [ ] `GET /` returns the service JSON
-- [ ] `POST /tasks` returns `202 Accepted` within milliseconds
-- [ ] Background tasks print progress lines and complete after their duration
-
 ## Next Steps
 
 This lab establishes the API plus background-task pattern that Lab 19 extends with Celery and Redis. The replacement swaps the in-process thread for a distributed worker queue.
