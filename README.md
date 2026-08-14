@@ -1,8 +1,6 @@
 # Lab 18 — Flask API with Background Tasks
 
-A beginner-friendly lab that shows how a Flask API can accept a request, start work in the background, and return a response **without waiting** for that work to finish.
-
-This is the foundation for later labs that introduce Celery, Redis, and distributed tracing.
+A beginner-friendly lab showing how a Flask API can accept a request, start work in the background, and return a response **without waiting** for that work to finish. Foundation for later labs on Celery, Redis, and distributed tracing.
 
 ---
 
@@ -21,17 +19,15 @@ This is the foundation for later labs that introduce Celery, Redis, and distribu
 
 ## Introduction
 
-When an API receives a request, the server normally processes the work, then returns a response. If the work takes several seconds, the client has to wait.
+When an API receives a request, the server normally processes the work, then returns a response. If the work takes several seconds, the client waits.
 
-A **background task** lets the API start the work and respond immediately, while the work continues independently. This is the core idea behind async APIs, queues, and workers.
+A **background task** lets the API start the work and respond immediately. The work continues independently. This is the core idea behind async APIs, queues, and workers.
 
-In this lab, you will build the simplest possible version of this pattern using Flask and Python's standard library.
+In this lab you build the simplest version using Flask and Python's standard library.
 
 ---
 
 ## Learning Objectives
-
-By the end of this lab, you will be able to:
 
 - Explain what a background task is.
 - Distinguish synchronous execution from background execution.
@@ -45,9 +41,9 @@ By the end of this lab, you will be able to:
 
 - Python 3.x installed inside the Poridhi VM.
 - `pip` available.
-- Postman installed (or use `curl` from the VM).
+- Postman installed on your host machine.
 
-> **How this lab is organized:** All code is embedded directly in this README. You do not need to create any extra files. Just copy each code block into a Python file inside the VM and run it.
+> All code is embedded in this README. Copy each code block into a Python file inside the VM and run it.
 
 ---
 
@@ -61,9 +57,9 @@ By the end of this lab, you will be able to:
 
 ### Quick Explanation
 
-A **Flask API** handles HTTP requests. By default, the API waits for the request handler to finish, then sends the response back to the client.
+A **Flask API** handles HTTP requests. By default, the API waits for the handler to finish, then sends the response.
 
-A **background task** is work that runs separately from the request flow. The API can start the work and immediately respond — the work continues on its own.
+A **background task** runs separately from the request flow. The API can start the work and immediately respond.
 
 ```
 Synchronous:   Client → API → wait 5s → API → Client
@@ -76,68 +72,37 @@ Background:    Client → API → Client    (background work continues elsewhere
 
 ### Step 1 — Install Flask
 
-Run this once inside the Poridhi VM:
-
 ```bash
 pip install flask
 ```
 
-### Step 2 — Create the background task file
+### Step 2 — Create `tasks.py`
 
-> ⚠️ **Important:** Do NOT type `python` alone — that opens the interactive REPL (`>>>`). You need to create a file, then run it.
-
-We'll use the simplest possible method that works in any terminal — a shell heredoc. Run this single command in the VM and paste the code at the end:
+Run this in the VM:
 
 ```bash
 cat > tasks.py << 'EOF'
-```
-
-Paste the code below, then on a new line type:
-
-```
-EOF
-```
-
-and press **Enter**. The shell will write everything between the two `EOF` markers into `tasks.py`.
-
-```python
-# tasks.py
 import time
 
 
 def run_background_task(task_id: str, duration: int = 5) -> None:
-    """
-    A simple background task that simulates work.
-
-    It prints clear progress messages so beginners can
-    observe asynchronous behavior in the terminal.
-    """
     print(f"[Task {task_id}] Task started", flush=True)
-
     for second in range(1, duration + 1):
         time.sleep(1)
         print(f"[Task {task_id}] Task processing... ({second}/{duration})", flush=True)
-
     print(f"[Task {task_id}] Task completed", flush=True)
+EOF
 ```
 
-### Step 3 — Create the Flask application
+After typing `EOF` on its own line, press **Enter** to close the file.
 
-Use the same heredoc trick for `app.py`:
+### Step 3 — Create `app.py`
 
 ```bash
 cat > app.py << 'EOF'
-```
-
-Paste the following code, then on a new line type `EOF` and press **Enter**:
-
-```python
-# app.py
 import uuid
 from threading import Thread
-
 from flask import Flask, jsonify, request
-
 from tasks import run_background_task
 
 app = Flask(__name__)
@@ -145,32 +110,18 @@ app = Flask(__name__)
 
 @app.route("/tasks", methods=["POST"])
 def create_task():
-    """
-    Endpoint that receives a request, starts a background task,
-    and returns a response immediately without waiting for the
-    background task to finish.
-    """
-    # 1. Request is received here
     payload = request.get_json(silent=True) or {}
     duration = int(payload.get("duration", 5))
-
-    # 2. Generate a task id so we can identify the background work
     task_id = uuid.uuid4().hex[:8]
 
-    # 3. Start the background task on a separate thread.
-    #    The thread runs independently of the request flow.
     thread = Thread(target=run_background_task, args=(task_id, duration))
     thread.start()
 
-    # 4. Return the response immediately.
-    #    We do NOT wait for the background task to finish.
-    return jsonify(
-        {
-            "status": "accepted",
-            "task_id": task_id,
-            "message": "Task started in the background",
-        }
-    ), 202
+    return jsonify({
+        "status": "accepted",
+        "task_id": task_id,
+        "message": "Task started in the background",
+    }), 202
 
 
 @app.route("/", methods=["GET"])
@@ -179,31 +130,23 @@ def index():
 
 
 if __name__ == "__main__":
-    # Run the Flask development server
     app.run(host="127.0.0.1", port=5000, debug=False)
+EOF
 ```
 
-### Step 4 — Verify your files
-
-Before running, make sure both files exist in the same directory:
+### Step 4 — Verify files
 
 ```bash
 ls
 ```
 
-You should see `app.py` and `tasks.py` listed.
+You should see `app.py` and `tasks.py` in the output.
 
 ### Step 5 — Run the application
-
-Inside the VM, in the same directory as `app.py`:
 
 ```bash
 python app.py
 ```
-
-> ⚠️ Use `python app.py` (with the filename). Typing just `python` opens the REPL and your code won't be saved to a file.
-
-> 💡 **Tip:** If your VM doesn't have `nano`, the heredoc method above works in any bash shell. If you'd rather use an editor and `nano` is missing, try `vi app.py` (press `i` to insert, paste, then `Esc` → `:wq` → `Enter` to save).
 
 **📷 Screenshot 1 — Flask app running**
 
@@ -223,51 +166,99 @@ Press CTRL+C to quit
 
 - **Request is received:** `POST /tasks` route in `app.py`.
 - **Background task starts:** `Thread(target=run_background_task, ...).start()`.
-- **Why the API responds immediately:** Flask returns the JSON response right after `thread.start()` — it never waits for `run_background_task` to finish. The thread runs independently in the background.
+- **Why the API responds immediately:** Flask returns the JSON response right after `thread.start()` — it never waits for `run_background_task` to finish. The thread runs independently.
 
 ---
 
 ## Chapter 3 — Test with Postman
 
-### Postman Setup
+Postman is an HTTP client used to test APIs visually. It lets you choose a method, enter a URL, attach headers and a body, and see the response. It runs on your host machine, not inside the Poridhi VM.
 
-1. Open Postman.
-2. Create a new request.
-3. Set method to **POST**.
-4. URL: `http://127.0.0.1:5000/tasks`.
-5. Headers tab → add: `Content-Type: application/json`.
-6. Body tab → raw → JSON:
+### 3.1 — Install and Open Postman
 
-   ```json
-   {"duration": 5}
-   ```
+If you don't have Postman yet:
 
-   (`duration` is optional — defaults to 5 seconds.)
-7. Click **Send**.
+1. Go to https://www.postman.com/downloads/
+2. Download the version for your operating system (Windows / macOS / Linux).
+3. Install it and open it.
+4. You can skip the sign-in — Postman works without an account, though it may show a small prompt. Close any "create account" tabs.
+
+You should see the main Postman window with a blank request tab at the top.
+
+### 3.2 — Find the API Address (Important)
+
+The Flask app is running inside the Poridhi VM. Your host machine cannot directly reach `127.0.0.1` of the VM — that address means "this machine" and "this machine" is your host, not the VM.
+
+The Poridhi VM usually exposes itself to your host on a special address. From the VM terminal, run:
+
+```bash
+hostname -I
+```
+
+You'll see one or more IP addresses like `10.0.0.5` or `192.168.x.x`. Pick the first one.
+
+> In this lab we'll assume the VM IP is `10.0.0.5`. Replace it with your actual IP everywhere it appears.
+
+### 3.3 — Create a New Request
+
+1. Click the **+** button at the top of Postman (or press `Ctrl+N` / `Cmd+N`).
+2. A new tab opens with the title "Untitled Request".
+3. You'll see a request builder with:
+   - A dropdown for the HTTP method (currently says `GET`)
+   - A text field for the URL
+   - Tabs below: **Params**, **Authorization**, **Headers**, **Body**, **Scripts**, **Tests**
+
+### 3.4 — Configure the Request
+
+**Set the method:**
+- Click the dropdown that says `GET` and choose **`POST`**.
+
+**Set the URL:**
+- Click the URL field and type:
+  ```
+  http://10.0.0.5:5000/tasks
+  ```
+  (Replace `10.0.0.5` with your VM IP from step 3.2.)
+
+**Add a header:**
+- Click the **Headers** tab.
+- Under the **Key** column, type: `Content-Type`
+- Under the **Value** column, type: `application/json`
+
+**Add a request body:**
+- Click the **Body** tab.
+- Select the radio button **`raw`** (it's on the right side of the tab).
+- A dropdown next to the radio buttons says `Text` by default — click it and choose **`JSON`**.
+- In the large text area, type:
+  ```json
+  {
+    "duration": 5
+  }
+  ```
+
+### 3.5 — Send the Request
+
+- Click the blue **Send** button on the right side of the URL bar.
+- Postman shows the response below in the lower half of the window.
+- Look at the status code on the right side of the response area — it should be **`202 Accepted`**.
+- The response body will be:
+  ```json
+  {
+    "status": "accepted",
+    "task_id": "abc12345",
+    "message": "Task started in the background"
+  }
+  ```
+
+Notice how the response arrives **immediately**, even though the task takes 5 seconds to complete.
 
 **📷 Screenshot 2 — Postman POST /tasks**
 
 > Save your screenshot as `images/02-postman-request.png`
 
-Expected immediate response (status `202`):
+### 3.6 — Observe Background Execution
 
-```json
-{
-  "status": "accepted",
-  "task_id": "abc12345",
-  "message": "Task started in the background"
-}
-```
-
-### Observe Background Execution
-
-After sending the request, watch the Flask terminal — the progress messages appear even though Postman already got its response.
-
-**📷 Screenshot 3 — Terminal output**
-
-> Save your screenshot as `images/03-terminal-progress.png`
-
-Expected terminal output:
+Switch to the terminal where Flask is running. You'll see progress messages from the background task, even though Postman already received its response:
 
 ```
 [Task abc12345] Task started
@@ -279,15 +270,20 @@ Expected terminal output:
 [Task abc12345] Task completed
 ```
 
-### Multiple Requests Test
+**📷 Screenshot 3 — Terminal output**
 
-Send 3 requests quickly in Postman (different durations: 5, 3, 2). You will see all 3 tasks running in parallel.
+> Save your screenshot as `images/03-terminal-progress.png`
 
-**📷 Screenshot 4 — Multiple requests**
+### 3.7 — Multiple Requests Test
 
-> Save your screenshot as `images/04-multiple-requests.png`
+To prove background tasks truly run in parallel:
 
-Expected terminal output:
+1. Stay on the same Postman request.
+2. Change the body to `{"duration": 2}` and click **Send**.
+3. Quickly change it to `{"duration": 3}` and click **Send** again.
+4. Quickly change it to `{"duration": 5}` and click **Send** a third time.
+
+All three responses arrive almost instantly in Postman. Switch to the Flask terminal — you'll see three tasks started almost at the same time, with their progress messages interleaved:
 
 ```
 [Task A1B2C3D4] Task started
@@ -307,22 +303,33 @@ Expected terminal output:
 [Task A1B2C3D4] Task completed
 ```
 
-### What happens when you send 3 requests quickly
+The shorter task finishes first, then the medium one, then the longest. All three were running at the same time.
 
-- Each request returns `202 Accepted` immediately.
-- All 3 background tasks start at the same time.
-- Each task completes independently after its own duration.
-- Tasks overlap in the terminal — proving they run in parallel.
+**📷 Screenshot 4 — Multiple requests**
+
+> Save your screenshot as `images/04-multiple-requests.png`
+
+### 3.8 — Optional: Save the Request
+
+For future use:
+
+1. Click **Save** (top right of the request tab).
+2. Name it `Flask Lab 18 - Tasks`.
+3. Choose **Create Collection**, name it `Lab 18`, and save.
+
+Saved requests keep their method, URL, headers, and body, so you don't have to re-enter them next time.
 
 ---
 
 ## Troubleshooting
 
-| Problem                          | Solution                                            |
-|----------------------------------|-----------------------------------------------------|
-| `ModuleNotFoundError: flask`     | Run `pip install flask`                             |
-| Port already in use              | Change `port=5000` in `app.py`                      |
-| Background task does not print   | Run Flask directly with `python app.py` (no reloader) |
+| Problem                          | Solution                                          |
+|----------------------------------|---------------------------------------------------|
+| `ModuleNotFoundError: flask`     | Run `pip install flask`                           |
+| Port already in use              | Change `port=5000` in `app.py`                    |
+| Connection refused from Postman  | Use the VM IP (`hostname -I`), not `127.0.0.1`    |
+| Background task does not print   | Run Flask directly with `python app.py`           |
+| `nano: command not found`        | Use the heredoc `cat > file.py << 'EOF'` method   |
 
 ---
 
