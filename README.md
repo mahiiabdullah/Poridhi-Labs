@@ -4,7 +4,9 @@
 
 This lab teaches the simplest possible background-task pattern using Flask and Python threading. The API accepts a request, starts work on a separate thread, and returns immediately.
 
-<p align="center"><img src="./images/architecture.drawio.svg" alt="Flask API with background thread architecture"></p>
+## Architecture
+
+<p align="center"><img src="./assets/diagrams/architecture.svg" alt="Lab 18 Architecture"></p>
 
 ## What You Will Build
 
