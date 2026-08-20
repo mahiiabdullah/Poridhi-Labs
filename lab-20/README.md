@@ -360,15 +360,23 @@ The task fails on attempts one and two, retries, and succeeds on attempt three. 
 
 ## Step 15: Tune the backoff window
 
-Open `app/tasks.py` with `cat`:
+Rewrite `app/tasks.py` with the new decorator block so the demo finishes quickly:
 
 ```bash
-cat app/tasks.py
-```
+cat > app/tasks.py << 'EOF'
+# app/tasks.py
+import time
 
-Replace the decorator block with the following lines so the demo finishes quickly:
+from celery.utils.log import get_task_logger
+from celery_worker import celery
 
-```python
+logger = get_task_logger(__name__)
+
+
+class TransientError(Exception):
+    """Raised by the task to simulate a flaky downstream dependency."""
+
+
 @celery.task(
     name="tasks.flaky_task",
     bind=True,
@@ -379,11 +387,24 @@ Replace the decorator block with the following lines so the demo finishes quickl
     max_retries=5,
     acks_late=True,
 )
+def flaky_task(self, task_id: str, fail_until: int = 99) -> dict:
+    attempt = self.request.retries + 1
+    logger.info("[Task %s] attempt %s starting", task_id, attempt)
+
+    time.sleep(1)
+
+    if attempt < fail_until:
+        logger.warning("[Task %s] attempt %s failed on purpose", task_id, attempt)
+        raise TransientError(f"simulated failure on attempt {attempt}")
+
+    logger.info("[Task %s] attempt %s succeeded", task_id, attempt)
+    return {"task_id": task_id, "attempt": attempt, "status": "ok"}
+EOF
 ```
 
 `retry_backoff_max=4` caps each retry at four seconds. `retry_jitter=False` removes randomness so the doubling pattern is exact.
 
-Restart the worker:
+Restart the worker so the new decorator takes effect:
 
 ```bash
 docker compose restart celery
@@ -397,7 +418,15 @@ curl -X POST <FLASK-LB-URL>/tasks \
   -d '{"fail_until": 99}'
 ```
 
-The retries now happen at 1s, 2s, 4s, 4s, 4s instead of growing without bound.
+Watch the worker:
+
+```bash
+docker compose logs -f celery
+```
+
+Press `Ctrl+C` to detach from the log view — the worker keeps running.
+
+The retries now happen at exactly 1s, 2s, 4s, 4s, 4s. The Celery log lines read `retry: Retry in 1s`, `Retry in 2s`, `Retry in 4s`, `Retry in 4s`, `Retry in 4s` between attempts, ending with `raised unexpected: TransientError(...)` after attempt 6.
 
 ## Step 16: Stop the stack
 
