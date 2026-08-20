@@ -311,6 +311,8 @@ cd ~/lab-20
 docker compose logs -f celery
 ```
 
+`-f` follows the log stream and never returns on its own. Press `Ctrl+C` to detach from the log view — the worker keeps running, you only stop watching it. Reattach by running the same command again.
+
 The logs show six attempts in total. Each line reveals the backoff in action.
 
 Expected sequence (timings approximate, the `Retry in Ns` line comes from Celery's own retry machinery):
