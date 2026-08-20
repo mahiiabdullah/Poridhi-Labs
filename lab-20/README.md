@@ -114,6 +114,7 @@ celery = Celery(
     "lab20",
     broker="amqp://guest:guest@rabbitmq:5672//",
     backend="rpc://",
+    include=["tasks"],
 )
 
 celery.conf.update(
@@ -124,6 +125,8 @@ celery.conf.update(
 )
 EOF
 ```
+
+`include=["tasks"]` tells the worker to import `app/tasks.py` at startup so its `@celery.task` decorators run and register `tasks.flaky_task`. Without it, the worker boots with an empty `[tasks]` list and rejects every published task.
 
 ## Step 7: Create the task module with retry behavior
 
