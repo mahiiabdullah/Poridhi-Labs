@@ -26,6 +26,8 @@ docker --version
 docker compose version
 ```
 
+![](./images/Confirm%20Docker%20and%20Docker%20Compose%20are%20installed.png)
+
 ## Step 3: Create the requirements file
 
 Run this command to create `requirements.txt`:
@@ -240,12 +242,16 @@ Expected output:
 /home/poridhian/lab-20/app/tasks.py
 ```
 
+![](./images/Verify%20the%20file%20layout.png)
+
 ## Step 10: Build and start the stack
 
 ```bash
 cd ~/lab-20
 docker compose up -d --build
 ```
+
+![](./images/Step%2010%20docker%20compose%20up.png)
 
 Wait for RabbitMQ to pass its health check:
 
@@ -254,6 +260,8 @@ docker compose ps
 ```
 
 `lab20-rabbitmq` shows `healthy`.
+
+![](./images/Step%2010%20docker%20compose%20ps.png)
 
 ## Step 11: Open the Load Balancer modal in the lab UI
 
@@ -271,7 +279,9 @@ Sample output:
 
 Use the first IP printed as `LB_IP`. Open the Load Balancer modal.
 
-![](./images/load-balancer-modal.png)
+![](./images/hostname.png)
+
+![](./images/LoadBalancer%20setup.png)
 
 Expose one port:
 
@@ -301,6 +311,8 @@ Expected response within milliseconds:
   "message": "Failing task published; will retry with exponential backoff"
 }
 ```
+
+![](./images/Step%2012%20Trigger%20a%20failing%20task.png)
 
 ## Step 13: Watch the worker retry the task
 
@@ -340,6 +352,10 @@ Task tasks.flaky_task[<uuid>] raised unexpected: TransientError('simulated failu
 
 The center of each delay doubles — 1s, 2s, 4s, 8s, 16s — but `retry_jitter=True` adds a random offset, so your live numbers may be slightly different (for example `Retry in 0s`, `2s`, `2s`, `3s`, `14s`). After six attempts the task fails permanently and Celery prints `raised unexpected: TransientError(...)` with a traceback.
 
+![](./images/Step%2013%20Watch%20the%20worker%20retry%20the%20task_1.png)
+
+![](./images/Step%2013%20Watch%20the%20worker%20retry%20the%20task_2.png)
+
 ## Step 14: Trigger a task that recovers
 
 Make a task succeed on the third attempt by sending `fail_until: 3`:
@@ -357,6 +373,12 @@ docker compose logs -f celery
 ```
 
 The task fails on attempts one and two, retries, and succeeds on attempt three. The final log line reads `attempt 3 succeeded`.
+
+![](./images/Step%2014%20Trigger%20a%20task%20that%20recovers%20Curl.png)
+
+![](./images/Step%2014%20Trigger%20a%20task%20that%20recovers%20docker%20compose_1.png)
+
+![](./images/Step%2014%20Trigger%20a%20task%20that%20recovers%20docker%20compose_2.png)
 
 ## Step 15: Tune the backoff window
 
@@ -402,6 +424,8 @@ def flaky_task(self, task_id: str, fail_until: int = 99) -> dict:
 EOF
 ```
 
+![](./images/Rewrite%20app_tasks_py.png)
+
 `retry_backoff_max=4` caps each retry at four seconds. `retry_jitter=False` removes randomness so the doubling pattern is exact.
 
 Restart the worker so the new decorator takes effect:
@@ -410,6 +434,8 @@ Restart the worker so the new decorator takes effect:
 docker compose restart celery
 ```
 
+![](./images/Step%2015%20docker%20compose%20restart%20celery.png)
+
 Trigger the failing task again:
 
 ```bash
@@ -417,6 +443,8 @@ curl -X POST <FLASK-LB-URL>/tasks \
   -H "Content-Type: application/json" \
   -d '{"fail_until": 99}'
 ```
+
+![](./images/Step%2015%20Trigger%20the%20failing%20task%20again.png)
 
 Watch the worker:
 
@@ -439,6 +467,8 @@ Add `-v` to remove the RabbitMQ volume for a clean slate:
 ```bash
 docker compose down -v
 ```
+
+![](./images/docker%20compose%20down.png)
 
 ## Next Steps
 
