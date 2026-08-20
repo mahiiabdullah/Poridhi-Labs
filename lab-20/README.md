@@ -252,30 +252,29 @@ docker compose ps
 
 `lab20-rabbitmq` shows `healthy`.
 
-## Step 11: Expose the Flask API through the Poridhi Load Balancer
+## Step 11: Open the Load Balancer modal in the lab UI
 
-The VM is on a private network. Reach the Flask API through the Poridhi Load Balancer panel.
-
-### Step 11.1: Find the VM IP
+Open the **Load Balancer** modal in the lab UI (top-right). Run this once to find the IP to enter:
 
 ```bash
 hostname -I
 ```
 
-Pick the first IP, for example `10.61.7.107`.
+Sample output:
 
-### Step 11.2: Open the Load Balancer panel in the VM browser
-
-```bash
-http://localhost:8080
+```
+10.61.7.107 172.17.0.1 100.80.176.159 172.18.0.1
 ```
 
-### Step 11.3: Expose port 5000
+Use the first IP printed as `LB_IP`. Open the Load Balancer modal.
 
-Fill in the panel:
+![](./images/load-balancer-modal.png)
 
-- IP: `10.61.7.107`
-- Port: `5000`
+Expose one port:
+
+| Enter IP | Enter Port |
+|----------|------------|
+| `LB_IP` | `5000` (Flask API) |
 
 Click **Expose**. Copy the generated `.lb.poridhi.io` URL — the rest of the lab uses it as `<FLASK-LB-URL>`.
 
