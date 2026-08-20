@@ -1,414 +1,120 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 920" font-family="Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 460" font-family="Helvetica, Arial, sans-serif">
 
-  <!-- ============================================================ -->
-  <!-- DEFS: animation + markers -->
-  <!-- ============================================================ -->
+  <!-- background -->
+  <rect width="1080" height="460" fill="#ffffff"/>
+
+  <!-- title -->
+  <text x="40" y="48" font-size="22" font-weight="700" fill="#111827">Lab 19 — RabbitMQ Durability and Late Acks</text>
+  <text x="40" y="72" font-size="13" fill="#6b7280">Flask publishes a task to RabbitMQ; a Celery worker picks it up and acks only after it finishes.</text>
+
+  <!-- ============ BOX 1: CLIENT ============ -->
+  <g>
+    <rect x="60" y="160" width="200" height="160" rx="10"
+          fill="#ffffff" stroke="#111827" stroke-width="2"/>
+    <text x="160" y="190" text-anchor="middle"
+          font-size="16" font-weight="700" fill="#111827">CLIENT</text>
+    <text x="160" y="210" text-anchor="middle"
+          font-size="11" fill="#6b7280">curl · browser</text>
+    <line x1="80" y1="224" x2="240" y2="224" stroke="#e5e7eb" stroke-width="1"/>
+
+    <rect x="100" y="240" width="120" height="34" rx="4" fill="#0f172a"/>
+    <text x="160" y="261" text-anchor="middle"
+          font-size="11" font-family="Menlo, Consolas, monospace" fill="#cbd5e1">POST /tasks</text>
+
+    <text x="160" y="298" text-anchor="middle" font-size="11" fill="#374151">sends task,</text>
+    <text x="160" y="312" text-anchor="middle" font-size="11" fill="#374151">gets 202 back</text>
+  </g>
+
+  <!-- arrow: client -> flask -->
+  <line x1="262" y1="230" x2="358" y2="230"
+        stroke="#1f2937" stroke-width="2" marker-end="url(#a)"/>
+  <text x="310" y="220" text-anchor="middle" font-size="11" fill="#374151">HTTP request</text>
+  <line x1="358" y1="260" x2="262" y2="260"
+        stroke="#6b7280" stroke-width="1.5" stroke-dasharray="5 4"
+        marker-end="url(#ar)"/>
+  <text x="310" y="276" text-anchor="middle" font-size="11" fill="#6b7280">HTTP 202</text>
+
+  <!-- ============ BOX 2: FLASK API ============ -->
+  <g>
+    <rect x="360" y="160" width="220" height="160" rx="10"
+          fill="#ffffff" stroke="#111827" stroke-width="2"/>
+    <text x="470" y="190" text-anchor="middle"
+          font-size="16" font-weight="700" fill="#111827">FLASK API</text>
+    <text x="470" y="210" text-anchor="middle"
+          font-size="11" fill="#6b7280">web container · port 5000</text>
+    <line x1="380" y1="224" x2="560" y2="224" stroke="#e5e7eb" stroke-width="1"/>
+
+    <rect x="380" y="240" width="180" height="60" rx="4" fill="#0d1117"/>
+    <text x="390" y="258" font-size="10" font-family="Menlo, Consolas, monospace" fill="#7ee787">run_background_task</text>
+    <text x="398" y="272" font-size="10" font-family="Menlo, Consolas, monospace" fill="#f1fa8c">  .apply_async(args=...)</text>
+    <text x="390" y="286" font-size="9" font-family="Menlo, Consolas, monospace" fill="#6e7681"># posts to broker, returns 202</text>
+  </g>
+
+  <!-- arrow: flask -> rabbitmq -->
+  <line x1="582" y1="230" x2="678" y2="230"
+        stroke="#1f2937" stroke-width="2" marker-end="url(#a)"/>
+  <text x="630" y="220" text-anchor="middle" font-size="11" fill="#374151">AMQP publish</text>
+
+  <!-- ============ BOX 3: RABBITMQ ============ -->
+  <g>
+    <rect x="680" y="160" width="220" height="160" rx="10"
+          fill="#ffffff" stroke="#111827" stroke-width="2"/>
+    <text x="790" y="190" text-anchor="middle"
+          font-size="16" font-weight="700" fill="#111827">RABBITMQ</text>
+    <text x="790" y="210" text-anchor="middle"
+          font-size="11" fill="#6b7280">broker · AMQP</text>
+    <line x1="700" y1="224" x2="880" y2="224" stroke="#e5e7eb" stroke-width="1"/>
+
+    <!-- queue with D badge -->
+    <rect x="710" y="244" width="160" height="32" rx="4"
+          fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="730" y="265" font-size="12" font-family="Menlo, Consolas, monospace" fill="#92400e">celery</text>
+    <circle cx="850" cy="260" r="10" fill="#16a34a"/>
+    <text x="850" y="264" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">D</text>
+    <text x="790" y="295" text-anchor="middle" font-size="11" fill="#374151">durable queue — survives restart</text>
+    <text x="790" y="310" text-anchor="middle" font-size="10" fill="#6b7280">port 5672</text>
+  </g>
+
+  <!-- arrow: rabbitmq -> worker (downward) -->
+  <line x1="790" y1="322" x2="790" y2="382"
+        stroke="#15803d" stroke-width="2" marker-end="url(#ag)"/>
+  <text x="800" y="358" font-size="11" fill="#15803d">deliver (prefetch=1)</text>
+
+  <!-- ============ BOX 4: CELERY WORKER ============ -->
+  <g>
+    <rect x="380" y="384" width="600" height="56" rx="10"
+          fill="#ffffff" stroke="#15803d" stroke-width="2"/>
+    <text x="680" y="408" text-anchor="middle"
+          font-size="14" font-weight="700" fill="#111827">CELERY WORKER</text>
+    <text x="680" y="426" text-anchor="middle"
+          font-size="11" fill="#15803d">runs task · sends ack only after task completes (acks_late=True)</text>
+  </g>
+
+  <!-- ack return arrow (worker -> rabbitmq, going up on right side) -->
+  <line x1="980" y1="412" x2="980" y2="260"
+        stroke="#0e7490" stroke-width="2" stroke-dasharray="6 4"
+        marker-end="url(#am)"/>
+  <text x="994" y="338" font-size="11" fill="#0e7490">late ack</text>
+
+  <!-- bottom note -->
+  <text x="40" y="450" font-size="11" fill="#374151" font-style="italic">
+    If the worker crashes mid-task, RabbitMQ requeues the message because the ack never arrived.
+  </text>
+
+  <!-- arrow marker defs -->
   <defs>
-    <style type="text/css"><![CDATA[
-      @keyframes dashFlow {
-        to { stroke-dashoffset: -28; }
-      }
-      .flow {
-        stroke-dasharray: 8 6;
-        animation: dashFlow 1s linear infinite;
-      }
-      @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.3; }
-      }
-      .pulse-dot { animation: pulse 1.4s ease-in-out infinite; }
-    ]]></style>
-
-    <marker id="arrowFwd" viewBox="0 0 10 10" refX="9" refY="5"
-            markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2937"/>
     </marker>
-    <marker id="arrowRet" viewBox="0 0 10 10" refX="9" refY="5"
-            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
     </marker>
-    <marker id="arrowBg" viewBox="0 0 10 10" refX="9" refY="5"
-            markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+    <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#15803d"/>
     </marker>
-    <marker id="arrowMgmt" viewBox="0 0 10 10" refX="9" refY="5"
-            markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+    <marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#0e7490"/>
     </marker>
-
-    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#111827"/>
-      <stop offset="100%" stop-color="#1f2937"/>
-    </linearGradient>
   </defs>
-
-  <!-- Background -->
-  <rect width="1320" height="920" fill="#ffffff"/>
-
-  <!-- ============================================================ -->
-  <!-- HEADER -->
-  <!-- ============================================================ -->
-  <rect x="0" y="0" width="1320" height="110" fill="url(#headerGrad)"/>
-  <text x="40" y="50" font-size="24" font-weight="700" fill="#ffffff">
-    Lab 19 — RabbitMQ Durability, Management UI, and Acknowledgment Policies
-  </text>
-  <text x="40" y="74" font-size="14" fill="#d1d5db">
-    Flask + Celery worker + RabbitMQ broker — durable queues, late acks, broker UI
-  </text>
-  <text x="40" y="94" font-size="11" fill="#9ca3af" letter-spacing="1.2">
-    MODULE 60  ·  FLASK, CELERY, AND RABBITMQ
-  </text>
-
-  <!-- Key idea callout (top-right) -->
-  <g>
-    <rect x="800" y="28" width="480" height="68" rx="10"
-          fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
-    <text x="820" y="52" font-size="11" font-weight="700"
-          fill="#92400e" letter-spacing="1.2">KEY IDEA</text>
-    <text x="820" y="72" font-size="13" fill="#1f2937">
-      Durable queues survive a broker restart. Late acks survive a worker crash.
-    </text>
-    <text x="820" y="88" font-size="13" font-weight="600" fill="#1f2937">
-      Together: no message is lost, even mid-task.
-    </text>
-  </g>
-
-  <!-- ============================================================ -->
-  <!-- REGION 1 — REQUEST / RESPONSE PATH -->
-  <!-- ============================================================ -->
-  <rect x="40" y="140" width="1240" height="280" rx="18"
-        fill="#f9fafb" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4 4"/>
-  <text x="60" y="166" font-size="11" font-weight="700"
-        fill="#9ca3af" letter-spacing="1.4">HTTP REQUEST / RESPONSE PATH</text>
-  <rect x="40" y="140" width="6" height="280" rx="3" fill="#3b82f6"/>
-  <text x="60" y="184" font-size="11" font-style="italic" fill="#6b7280">
-    Synchronous handshake — client gets 202 in milliseconds
-  </text>
-
-  <!-- ============================================================ -->
-  <!-- BOX 1: CLIENT -->
-  <!-- ============================================================ -->
-  <g>
-    <rect x="80" y="210" width="220" height="190" rx="14"
-          fill="#ffffff" stroke="#111827" stroke-width="2"/>
-    <circle cx="106" cy="236" r="14" fill="#111827"/>
-    <text x="106" y="241" text-anchor="middle"
-          font-size="14" font-weight="700" fill="#ffffff">1</text>
-    <text x="190" y="246" text-anchor="middle"
-          font-size="18" font-weight="700" fill="#111827">CLIENT</text>
-    <text x="190" y="266" text-anchor="middle"
-          font-size="11" fill="#6b7280">curl · Postman · HTTP</text>
-    <line x1="100" y1="278" x2="280" y2="278" stroke="#e5e7eb" stroke-width="1"/>
-
-    <!-- HTTP client icon -->
-    <rect x="148" y="296" width="84" height="46" rx="6" fill="#0f172a"/>
-    <rect x="153" y="301" width="74" height="36" rx="3" fill="#1e293b"/>
-    <circle cx="161" cy="307" r="1.5" fill="#22c55e"/>
-    <circle cx="166" cy="307" r="1.5" fill="#facc15"/>
-    <circle cx="171" cy="307" r="1.5" fill="#ef4444"/>
-    <text x="190" y="324" text-anchor="middle"
-          font-size="9" font-family="Menlo, Consolas, monospace" fill="#cbd5e1">curl</text>
-
-    <text x="190" y="362" text-anchor="middle"
-          font-size="12" fill="#374151">Sends <tspan font-family="Menlo, Consolas, monospace"
-          fill="#111827">POST /tasks</tspan></text>
-    <text x="190" y="382" text-anchor="middle"
-          font-size="12" fill="#374151">Receives 202</text>
-  </g>
-
-  <!-- Arrow 1 forward: Client -> Flask -->
-  <line class="flow" x1="304" y1="280" x2="420" y2="280"
-        stroke="#1f2937" stroke-width="2" marker-end="url(#arrowFwd)"/>
-  <text x="362" y="268" text-anchor="middle"
-        font-size="12" font-weight="600" fill="#1f2937">HTTP request</text>
-  <text x="362" y="280" text-anchor="middle"
-        font-size="11" font-family="Menlo, Consolas, monospace" fill="#1f2937">POST /tasks</text>
-
-  <!-- Arrow 1 return: Flask -> Client -->
-  <line class="flow" x1="420" y1="320" x2="304" y2="320"
-        stroke="#6b7280" stroke-width="1.5" stroke-dasharray="6 4"
-        marker-end="url(#arrowRet)"/>
-  <text x="362" y="312" text-anchor="middle"
-        font-size="12" font-weight="600" fill="#6b7280">HTTP response</text>
-  <g>
-    <rect x="340" y="326" width="44" height="16" rx="3" fill="#dcfce7"/>
-    <text x="362" y="338" text-anchor="middle"
-          font-size="10" font-weight="700" fill="#15803d">202</text>
-  </g>
-
-  <!-- ============================================================ -->
-  <!-- BOX 2: FLASK API -->
-  <!-- ============================================================ -->
-  <g>
-    <rect x="430" y="210" width="280" height="190" rx="14"
-          fill="#ffffff" stroke="#111827" stroke-width="2"/>
-    <circle cx="456" cy="236" r="14" fill="#111827"/>
-    <text x="456" y="241" text-anchor="middle"
-          font-size="14" font-weight="700" fill="#ffffff">2</text>
-    <text x="570" y="246" text-anchor="middle"
-          font-size="18" font-weight="700" fill="#111827">FLASK API</text>
-    <text x="570" y="266" text-anchor="middle"
-          font-size="11" fill="#6b7280">Web container · port 5000</text>
-    <line x1="450" y1="278" x2="690" y2="278" stroke="#e5e7eb" stroke-width="1"/>
-
-    <g>
-      <rect x="450" y="290" width="118" height="22" rx="4"
-            fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
-      <text x="509" y="305" text-anchor="middle"
-            font-size="11" font-family="Menlo, Consolas, monospace" fill="#3730a3">POST /tasks</text>
-      <rect x="572" y="290" width="118" height="22" rx="4"
-            fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
-      <text x="631" y="305" text-anchor="middle"
-            font-size="11" font-family="Menlo, Consolas, monospace" fill="#374151">GET  /</text>
-    </g>
-
-    <!-- Code snippet -->
-    <rect x="450" y="322" width="240" height="68" rx="4" fill="#0d1117"/>
-    <text x="458" y="338" font-size="10" font-family="Menlo, Consolas, monospace" fill="#7ee787">
-      <tspan fill="#6e7681"># publish to RabbitMQ</tspan>
-    </text>
-    <text x="458" y="352" font-size="10" font-family="Menlo, Consolas, monospace" fill="#7ee787">
-      run_background_task.<tspan fill="#f1fa8c">apply_async</tspan>(
-    </text>
-    <text x="458" y="366" font-size="10" font-family="Menlo, Consolas, monospace" fill="#7ee787">
-      &#160;&#160;args=[task_id, duration])
-    </text>
-    <text x="458" y="380" font-size="10" font-family="Menlo, Consolas, monospace" fill="#7ee787">
-      <tspan fill="#6e7681"># return 202 immediately</tspan>
-    </text>
-  </g>
-
-  <!-- Arrow 2: Flask -> RabbitMQ (publish) -->
-  <line class="flow" x1="714" y1="280" x2="820" y2="280"
-        stroke="#1f2937" stroke-width="2" marker-end="url(#arrowFwd)"/>
-  <text x="767" y="268" text-anchor="middle"
-        font-size="12" font-weight="600" fill="#1f2937">publish</text>
-  <text x="767" y="280" text-anchor="middle"
-        font-size="11" font-family="Menlo, Consolas, monospace" fill="#1f2937">AMQP message</text>
-
-  <!-- ============================================================ -->
-  <!-- BOX 3: RABBITMQ BROKER -->
-  <!-- ============================================================ -->
-  <g>
-    <rect x="830" y="210" width="220" height="190" rx="14"
-          fill="#ffffff" stroke="#111827" stroke-width="2"/>
-    <circle cx="856" cy="236" r="14" fill="#111827"/>
-    <text x="856" y="241" text-anchor="middle"
-          font-size="14" font-weight="700" fill="#ffffff">3</text>
-    <text x="940" y="246" text-anchor="middle"
-          font-size="18" font-weight="700" fill="#111827">RABBITMQ</text>
-    <text x="940" y="266" text-anchor="middle"
-          font-size="11" fill="#6b7280">broker · AMQP</text>
-    <line x1="850" y1="278" x2="1030" y2="278" stroke="#e5e7eb" stroke-width="1"/>
-
-    <!-- Queue visualization -->
-    <rect x="850" y="294" width="180" height="34" rx="4"
-          fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
-    <text x="868" y="312" font-size="11" font-family="Menlo, Consolas, monospace" fill="#92400e">
-      celery
-    </text>
-    <!-- D badge for durable -->
-    <circle cx="1010" cy="311" r="9" fill="#16a34a"/>
-    <text x="1010" y="315" text-anchor="middle"
-          font-size="11" font-weight="700" fill="#ffffff">D</text>
-    <text x="868" y="348" text-anchor="middle"
-          font-size="10" fill="#374151" font-weight="600">queue · durable</text>
-
-    <text x="940" y="372" text-anchor="middle"
-          font-size="11" fill="#6b7280">port 5672</text>
-    <text x="940" y="388" text-anchor="middle"
-          font-size="11" fill="#6b7280">survives restart</text>
-  </g>
-
-  <!-- Arrow 3: RabbitMQ -> Management UI (cy/0e7490) -->
-  <line class="flow" x1="1054" y1="280" x2="1180" y2="280"
-        stroke="#0e7490" stroke-width="2" marker-end="url(#arrowMgmt)"/>
-  <text x="1117" y="268" text-anchor="middle"
-        font-size="12" font-weight="600" fill="#0e7490">inspect</text>
-  <text x="1117" y="280" text-anchor="middle"
-        font-size="11" font-family="Menlo, Consolas, monospace" fill="#0e7490">port 15672</text>
-
-  <!-- ============================================================ -->
-  <!-- BOX 4: MANAGEMENT UI -->
-  <!-- ============================================================ -->
-  <g>
-    <rect x="1190" y="210" width="80" height="190" rx="14"
-          fill="#ffffff" stroke="#0e7490" stroke-width="2"/>
-    <circle cx="1216" cy="236" r="14" fill="#0e7490"/>
-    <text x="1216" y="241" text-anchor="middle"
-          font-size="14" font-weight="700" fill="#ffffff">4</text>
-    <text x="1230" y="270" text-anchor="middle"
-          font-size="10" font-weight="700" fill="#111827">MGMT</text>
-    <text x="1230" y="284" text-anchor="middle"
-          font-size="10" font-weight="700" fill="#111827">UI</text>
-
-    <rect x="1200" y="304" width="60" height="46" rx="4" fill="#0e7490"/>
-    <text x="1230" y="320" text-anchor="middle"
-          font-size="9" font-weight="700" fill="#ffffff">RABBIT</text>
-    <text x="1230" y="332" text-anchor="middle"
-          font-size="9" font-weight="700" fill="#ffffff">MQ</text>
-    <text x="1230" y="346" text-anchor="middle"
-          font-size="8" fill="#ffffff">web</text>
-
-    <text x="1230" y="372" text-anchor="middle"
-          font-size="9" fill="#374151">guest / guest</text>
-    <text x="1230" y="386" text-anchor="middle"
-          font-size="9" fill="#6b7280">browse queues</text>
-  </g>
-
-  <!-- ============================================================ -->
-  <!-- REGION 2 — WORKER EXECUTION PATH -->
-  <!-- ============================================================ -->
-  <rect x="40" y="450" width="1240" height="280" rx="18"
-        fill="#f0fdf4" stroke="#86efac" stroke-width="1" stroke-dasharray="4 4"/>
-  <text x="60" y="476" font-size="11" font-weight="700"
-        fill="#15803d" letter-spacing="1.4">WORKER EXECUTION PATH  ·  independent process</text>
-  <rect x="40" y="450" width="6" height="280" rx="3" fill="#22c55e"/>
-  <text x="60" y="494" font-size="11" font-style="italic" fill="#15803d">
-    Worker pulls tasks, runs them, and only then sends an ack — late ack guarantees no in-flight loss
-  </text>
-
-  <!-- Arrow 4: RabbitMQ -> Worker (consume) -->
-  <path class="flow" d="M 940 404 L 940 540"
-        fill="none" stroke="#15803d" stroke-width="2"
-        marker-end="url(#arrowBg)"/>
-  <g>
-    <rect x="848" y="450" width="184" height="22" rx="11" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
-    <text x="940" y="465" text-anchor="middle"
-          font-size="12" font-weight="700" fill="#15803d">consume (prefetch=1)</text>
-  </g>
-
-  <!-- ============================================================ -->
-  <!-- BOX 5: CELERY WORKER -->
-  <!-- ============================================================ -->
-  <g>
-    <rect x="120" y="540" width="640" height="160" rx="14"
-          fill="#ffffff" stroke="#15803d" stroke-width="2"/>
-    <circle cx="146" cy="566" r="14" fill="#15803d"/>
-    <text x="146" y="571" text-anchor="middle"
-          font-size="14" font-weight="700" fill="#ffffff">5</text>
-    <text x="440" y="576" text-anchor="middle"
-          font-size="18" font-weight="700" fill="#111827">CELERY WORKER</text>
-    <text x="440" y="596" text-anchor="middle"
-          font-size="11" fill="#15803d">separate container · long-running</text>
-    <line x1="140" y1="608" x2="740" y2="608" stroke="#e5e7eb" stroke-width="1"/>
-
-    <text x="440" y="630" text-anchor="middle"
-          font-size="11" font-weight="700" fill="#374151">Worker config:</text>
-
-    <circle cx="150" cy="650" r="3" fill="#15803d" class="pulse-dot"/>
-    <text x="160" y="653" font-size="11" fill="#374151">task_acks_late=True</text>
-
-    <circle cx="150" cy="668" r="3" fill="#15803d" class="pulse-dot"/>
-    <text x="160" y="671" font-size="11" fill="#374151">task_reject_on_worker_lost=True</text>
-
-    <circle cx="430" cy="650" r="3" fill="#15803d" class="pulse-dot"/>
-    <text x="440" y="653" font-size="11" fill="#374151">worker_prefetch_multiplier=1</text>
-
-    <circle cx="430" cy="668" r="3" fill="#15803d" class="pulse-dot"/>
-    <text x="440" y="671" font-size="11" fill="#374151">task_acks_on_failure_or_timeout=False</text>
-  </g>
-
-  <!-- ============================================================ -->
-  <!-- BOX 6: ACK PATH (return) -->
-  <!-- ============================================================ -->
-  <g>
-    <rect x="820" y="540" width="380" height="160" rx="14"
-          fill="#ffffff" stroke="#0e7490" stroke-width="2"/>
-    <circle cx="846" cy="566" r="14" fill="#0e7490"/>
-    <text x="846" y="571" text-anchor="middle"
-          font-size="14" font-weight="700" fill="#ffffff">6</text>
-    <text x="1010" y="576" text-anchor="middle"
-          font-size="18" font-weight="700" fill="#111827">LATE ACK</text>
-    <text x="1010" y="596" text-anchor="middle"
-          font-size="11" fill="#0e7490">sent only after task completes</text>
-    <line x1="840" y1="608" x2="1180" y2="608" stroke="#e5e7eb" stroke-width="1"/>
-
-    <text x="1010" y="630" text-anchor="middle"
-          font-size="11" font-weight="700" fill="#374151">Sequence:</text>
-    <text x="845" y="650" font-size="11" fill="#374151">1. worker pulls message</text>
-    <text x="845" y="668" font-size="11" fill="#374151">2. runs task to completion</text>
-    <text x="845" y="686" font-size="11" fill="#374151">3. sends ack to RabbitMQ</text>
-  </g>
-
-  <!-- Arrow 5: Worker -> Late Ack (late ack return) -->
-  <path class="flow" d="M 760 620 L 820 620"
-        fill="none" stroke="#0e7490" stroke-width="2"
-        marker-end="url(#arrowMgmt)"/>
-  <text x="790" y="612" text-anchor="middle"
-        font-size="11" font-weight="700" fill="#0e7490">ack after done</text>
-
-  <!-- ============================================================ -->
-  <!-- TIMELINE — bottom row -->
-  <!-- ============================================================ -->
-  <g transform="translate(40, 760)">
-    <text x="0" y="0" font-size="11" font-weight="700"
-          fill="#6b7280" letter-spacing="1.4">TIMELINE</text>
-    <line x1="60" y1="22" x2="1220" y2="22" stroke="#d1d5db" stroke-width="2"/>
-
-    <circle cx="60" cy="22" r="5" fill="#3b82f6"/>
-    <text x="60" y="48" text-anchor="middle"
-          font-size="10" font-weight="600" fill="#374151">t = 0 ms</text>
-    <text x="60" y="62" text-anchor="middle"
-          font-size="9" fill="#9ca3af">POST arrives</text>
-
-    <circle cx="100" cy="22" r="5" fill="#15803d"/>
-    <text x="100" y="48" text-anchor="middle"
-          font-size="10" font-weight="600" fill="#15803d">t = ~5 ms</text>
-    <text x="100" y="62" text-anchor="middle"
-          font-size="9" fill="#9ca3af">202 returned</text>
-
-    <circle cx="180" cy="22" r="5" fill="#6b7280"/>
-    <text x="180" y="48" text-anchor="middle"
-          font-size="10" font-weight="600" fill="#374151">t = ~5 ms</text>
-    <text x="180" y="62" text-anchor="middle"
-          font-size="9" fill="#9ca3af">worker pulls task</text>
-
-    <circle cx="1220" cy="22" r="5" fill="#0e7490"/>
-    <text x="1220" y="48" text-anchor="middle"
-          font-size="10" font-weight="600" fill="#0e7490">end of task</text>
-    <text x="1220" y="62" text-anchor="middle"
-          font-size="9" fill="#9ca3af">ack sent → message removed</text>
-
-    <rect x="60" y="17" width="1160" height="10" rx="5" fill="#dcfce7"/>
-
-    <line x1="110" y1="80" x2="1100" y2="80"
-          stroke="#9ca3af" stroke-width="1" stroke-dasharray="3 3"/>
-    <text x="600" y="76" text-anchor="middle"
-          font-size="10" font-style="italic" fill="#6b7280">
-      if the worker crashes mid-task, RabbitMQ requeues the message because the ack never arrived
-    </text>
-  </g>
-
-  <!-- ============================================================ -->
-  <!-- LEGEND -->
-  <!-- ============================================================ -->
-  <g transform="translate(40, 880)">
-    <text x="0" y="0" font-size="11" font-weight="700"
-          fill="#6b7280" letter-spacing="1.4">LEGEND</text>
-
-    <line class="flow" x1="0" y1="18" x2="32" y2="18"
-          stroke="#1f2937" stroke-width="2" marker-end="url(#arrowFwd)"/>
-    <text x="40" y="22" font-size="11" fill="#374151">forward flow</text>
-
-    <line class="flow" x1="160" y1="18" x2="192" y2="18"
-          stroke="#6b7280" stroke-width="1.5" stroke-dasharray="6 4"
-          marker-end="url(#arrowRet)"/>
-    <text x="200" y="22" font-size="11" fill="#374151">HTTP response</text>
-
-    <line class="flow" x1="350" y1="18" x2="382" y2="18"
-          stroke="#15803d" stroke-width="2" marker-end="url(#arrowBg)"/>
-    <text x="390" y="22" font-size="11" fill="#15803d">worker flow</text>
-
-    <line class="flow" x1="540" y1="18" x2="572" y2="18"
-          stroke="#0e7490" stroke-width="2" marker-end="url(#arrowMgmt)"/>
-    <text x="580" y="22" font-size="11" fill="#0e7490">management UI / late ack</text>
-
-    <circle cx="820" cy="18" r="9" fill="#16a34a"/>
-    <text x="820" y="22" text-anchor="middle"
-          font-size="10" font-weight="700" fill="#ffffff">D</text>
-    <text x="836" y="22" font-size="11" fill="#374151">durable queue</text>
-  </g>
 
 </svg>
