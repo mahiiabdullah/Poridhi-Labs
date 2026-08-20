@@ -254,17 +254,27 @@ docker compose ps
 
 ## Step 11: Expose the Flask API through the Poridhi Load Balancer
 
-The VM is on a private network. To reach port 5000 from the host, expose it through the Poridhi Load Balancer panel.
+The VM is on a private network. Reach the Flask API through the Poridhi Load Balancer panel.
 
-Open a browser **inside the VM** and visit:
+### Step 11.1: Find the VM IP
 
+```bash
+hostname -I
 ```
+
+Pick the first IP, for example `10.61.7.107`.
+
+### Step 11.2: Open the Load Balancer panel in the VM browser
+
+```bash
 http://localhost:8080
 ```
 
-Fill in:
+### Step 11.3: Expose port 5000
 
-- IP: your VM IP from `hostname -I` (for example `10.61.7.107`)
+Fill in the panel:
+
+- IP: `10.61.7.107`
 - Port: `5000`
 
 Click **Expose**. Copy the generated `.lb.poridhi.io` URL — the rest of the lab uses it as `<FLASK-LB-URL>`.

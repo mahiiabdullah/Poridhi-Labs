@@ -237,35 +237,51 @@ docker compose ps
 
 ## Step 12: Expose the RabbitMQ Management UI through the Poridhi Load Balancer
 
-The VM is on a private network. To reach port 15672 from your host browser, expose it through the Poridhi Load Balancer panel that runs inside the VM.
+The VM is on a private network. Reach the management UI through the Poridhi Load Balancer panel.
 
-Open a browser **inside the VM** and visit:
+### Step 12.1: Find the VM IP
 
+```bash
+hostname -I
 ```
+
+Pick the first IP, for example `10.61.7.107`.
+
+### Step 12.2: Open the Load Balancer panel in the VM browser
+
+```bash
 http://localhost:8080
 ```
 
-The Load Balancer panel appears with two input fields: **Enter IP** and **Enter Port**.
+### Step 12.3: Expose port 15672
 
-Fill in:
+Fill in the panel:
 
-- IP: `10.61.7.107` (your actual VM IP from `hostname -I`)
+- IP: `10.61.7.107`
 - Port: `15672`
 
-Click **Expose**. The panel generates a public URL ending in `.lb.poridhi.io`. Click the URL to open the RabbitMQ Management UI in a new tab.
+Click **Expose**. Click the generated `.lb.poridhi.io` URL to open the RabbitMQ Management UI in a new tab.
 
-Login with:
+### Step 12.4: Log in
 
 - Username: `guest`
 - Password: `guest`
 
-The dashboard shows three sections at the top: Overview, Connections, and Channels. The queue view is empty because no task has been published yet.
+The dashboard shows three sections at the top: Overview, Connections, Channels. The queue view is empty for now.
 
 ## Step 13: Expose the Flask API through the Poridhi Load Balancer
 
-The same Load Balancer panel is used to expose port 5000 so the Flask API is reachable from the host.
+Use the same Load Balancer panel to expose the Flask API.
 
-Open `http://localhost:8080` in the VM browser again. Fill in:
+### Step 13.1: Open the Load Balancer panel
+
+```bash
+http://localhost:8080
+```
+
+### Step 13.2: Expose port 5000
+
+Fill in the panel:
 
 - IP: `10.61.7.107`
 - Port: `5000`
