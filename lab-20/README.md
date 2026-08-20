@@ -252,12 +252,29 @@ docker compose ps
 
 `lab20-rabbitmq` shows `healthy`.
 
-## Step 11: Trigger a failing task
+## Step 11: Expose the Flask API through the Poridhi Load Balancer
+
+The VM is on a private network. To reach port 5000 from the host, expose it through the Poridhi Load Balancer panel.
+
+Open a browser **inside the VM** and visit:
+
+```
+http://localhost:8080
+```
+
+Fill in:
+
+- IP: your VM IP from `hostname -I` (for example `10.61.7.107`)
+- Port: `5000`
+
+Click **Expose**. Copy the generated `.lb.poridhi.io` URL — the rest of the lab uses it as `<FLASK-LB-URL>`.
+
+## Step 12: Trigger a failing task
 
 Send a POST request with a high `fail_until` so the task never succeeds:
 
 ```bash
-curl -X POST http://localhost:5000/tasks \
+curl -X POST <FLASK-LB-URL>/tasks \
   -H "Content-Type: application/json" \
   -d '{"fail_until": 99}'
 ```
@@ -273,7 +290,7 @@ Expected response within milliseconds:
 }
 ```
 
-## Step 12: Watch the worker retry the task
+## Step 13: Watch the worker retry the task
 
 Open a second terminal and follow the Celery worker logs:
 
@@ -309,12 +326,12 @@ Expected sequence (timings approximate):
 
 Notice the doubling delay: 1s, 2s, 4s, 8s, 16s.
 
-## Step 13: Trigger a task that recovers
+## Step 14: Trigger a task that recovers
 
 Make a task succeed on the third attempt by sending `fail_until: 3`:
 
 ```bash
-curl -X POST http://localhost:5000/tasks \
+curl -X POST <FLASK-LB-URL>/tasks \
   -H "Content-Type: application/json" \
   -d '{"fail_until": 3}'
 ```
@@ -327,7 +344,7 @@ docker compose logs -f celery
 
 The task fails on attempts one and two, retries, and succeeds on attempt three. The final log line reads `attempt 3 succeeded`.
 
-## Step 14: Tune the backoff window
+## Step 15: Tune the backoff window
 
 Open `app/tasks.py` with `cat`:
 
@@ -361,14 +378,14 @@ docker compose restart celery
 Trigger the failing task again:
 
 ```bash
-curl -X POST http://localhost:5000/tasks \
+curl -X POST <FLASK-LB-URL>/tasks \
   -H "Content-Type: application/json" \
   -d '{"fail_until": 99}'
 ```
 
 The retries now happen at 1s, 2s, 4s, 4s, 4s instead of growing without bound.
 
-## Step 15: Stop the stack
+## Step 16: Stop the stack
 
 ```bash
 docker compose down

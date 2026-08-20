@@ -2,7 +2,7 @@
 
 **Module 60 — Flask, Celery, and RabbitMQ**
 
-This lab upgrades the in-process threading model from Lab 18 to a distributed task queue. A Flask API publishes messages to RabbitMQ. A separate Celery worker consumes them. The lab covers durable queues, late acks, and a web UI for inspecting the broker.
+This lab upgrades the in-process threading model from previous lab. A Flask API publishes messages to RabbitMQ. A separate Celery worker consumes them. The lab covers durable queues, late acks, and a web UI for inspecting the broker.
 
 ## Architecture
 
@@ -235,19 +235,24 @@ docker compose ps
 
 `lab19-rabbitmq` shows `healthy` once the broker accepts AMQP connections.
 
-## Step 12: Open the RabbitMQ Management UI
+## Step 12: Expose the RabbitMQ Management UI through the Poridhi Load Balancer
 
-Open a browser and visit:
+The VM is on a private network. To reach port 15672 from your host browser, expose it through the Poridhi Load Balancer panel that runs inside the VM.
 
-```
-http://localhost:15672
-```
-
-From your host machine, replace `localhost` with the VM IP:
+Open a browser **inside the VM** and visit:
 
 ```
-http://<VM-IP>:15672
+http://localhost:8080
 ```
+
+The Load Balancer panel appears with two input fields: **Enter IP** and **Enter Port**.
+
+Fill in:
+
+- IP: `10.61.7.107` (your actual VM IP from `hostname -I`)
+- Port: `15672`
+
+Click **Expose**. The panel generates a public URL ending in `.lb.poridhi.io`. Click the URL to open the RabbitMQ Management UI in a new tab.
 
 Login with:
 
@@ -256,10 +261,23 @@ Login with:
 
 The dashboard shows three sections at the top: Overview, Connections, and Channels. The queue view is empty because no task has been published yet.
 
-## Step 13: Trigger a task from curl
+## Step 13: Expose the Flask API through the Poridhi Load Balancer
+
+The same Load Balancer panel is used to expose port 5000 so the Flask API is reachable from the host.
+
+Open `http://localhost:8080` in the VM browser again. Fill in:
+
+- IP: `10.61.7.107`
+- Port: `5000`
+
+Click **Expose**. Copy the generated `.lb.poridhi.io` URL — the rest of the lab uses it as `<FLASK-LB-URL>`.
+
+## Step 14: Trigger a task from curl
+
+Run this from the host terminal using the LB URL from Step 13:
 
 ```bash
-curl -X POST http://localhost:5000/tasks \
+curl -X POST <FLASK-LB-URL>/tasks \
   -H "Content-Type: application/json" \
   -d '{"duration": 5}'
 ```
@@ -274,7 +292,7 @@ Expected response within a few milliseconds:
 }
 ```
 
-## Step 14: Inspect the queue in the Management UI
+## Step 15: Inspect the queue in the Management UI
 
 Refresh the Management UI. Click the **Queues** tab.
 
@@ -287,7 +305,7 @@ The `celery` queue appears with these columns:
 
 The **D** badge confirms the queue is durable and survives a broker restart.
 
-## Step 15: Verify durable queues by restarting RabbitMQ
+## Step 16: Verify durable queues by restarting RabbitMQ
 
 ```bash
 docker compose restart rabbitmq
@@ -301,12 +319,12 @@ docker compose ps
 
 `lab19-rabbitmq` returns to `healthy`. Refresh the Management UI. The `celery` queue is still listed and still shows the **D** badge.
 
-## Step 16: Verify late acks by killing the worker mid-task
+## Step 17: Verify late acks by killing the worker mid-task
 
 Trigger a longer task so you have time to kill the worker:
 
 ```bash
-curl -X POST http://localhost:5000/tasks \
+curl -X POST <FLASK-LB-URL>/tasks \
   -H "Content-Type: application/json" \
   -d '{"duration": 30}'
 ```
@@ -335,7 +353,7 @@ docker compose logs -f celery
 
 You see a new `[Task a1b2c3d4] started` line followed by `processing (1/30)`. The same `task_id`, restarted from scratch. With early acks, this task would have been silently lost.
 
-## Step 17: Stop the stack
+## Step 18: Stop the stack
 
 ```bash
 docker compose down
