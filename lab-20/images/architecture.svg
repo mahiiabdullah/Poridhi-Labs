@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 960" font-family="Helvetica, Arial, sans-serif">
+
+  <!-- ============================================================ -->
+  <!-- DEFS: animation + markers -->
+  <!-- ============================================================ -->
+  <defs>
+    <style type="text/css"><![CDATA[
+      @keyframes dashFlow {
+        to { stroke-dashoffset: -28; }
+      }
+      .flow {
+        stroke-dasharray: 8 6;
+        animation: dashFlow 1s linear infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+      }
+      .pulse-dot { animation: pulse 1.4s ease-in-out infinite; }
+      @keyframes retryPulse {
+        0%, 100% { opacity: 0.55; }
+        50% { opacity: 1; }
+      }
+      .retry-loop {
+        stroke-dasharray: 4 4;
+        animation: dashFlow 1.6s linear infinite, retryPulse 2.4s ease-in-out infinite;
+      }
+    ]]></style>
+
+    <marker id="arrowFwd" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2937"/>
+    </marker>
+    <marker id="arrowRet" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
+    </marker>
+    <marker id="arrowBg" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#15803d"/>
+    </marker>
+    <marker id="arrowRetry" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b91c1c"/>
+    </marker>
+
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#1f2937"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1320" height="960" fill="#ffffff"/>
+
+  <!-- ============================================================ -->
+  <!-- HEADER -->
+  <!-- ============================================================ -->
+  <rect x="0" y="0" width="1320" height="110" fill="url(#headerGrad)"/>
+  <text x="40" y="50" font-size="24" font-weight="700" fill="#ffffff">
+    Lab 20 — Configuring Celery Task Retry Behavior
+  </text>
+  <text x="40" y="74" font-size="14" fill="#d1d5db">
+    autoretry_for + retry_backoff + max_retries — transient failures retry with exponential delay
+  </text>
+  <text x="40" y="94" font-size="11" fill="#9ca3af" letter-spacing="1.2">
+    MODULE 60  ·  FLASK, CELERY, AND RABBITMQ
+  </text>
+
+  <!-- Key idea callout (top-right) -->
+  <g>
+    <rect x="800" y="28" width="480" height="68" rx="10"
+          fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="820" y="52" font-size="11" font-weight="700"
+          fill="#92400e" letter-spacing="1.2">KEY IDEA</text>
+    <text x="820" y="72" font-size="13" fill="#1f2937">
+      Failed tasks wait longer between each retry — 1s, 2s, 4s, 8s, 16s.
+    </text>
+    <text x="820" y="88" font-size="13" font-weight="600" fill="#1f2937">
+      After max_retries, the task fails permanently.
+    </text>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- REGION 1 — REQUEST / RESPONSE PATH -->
+  <!-- ============================================================ -->
+  <rect x="40" y="140" width="1240" height="280" rx="18"
+        fill="#f9fafb" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4 4"/>
+  <text x="60" y="166" font-size="11" font-weight="700"
+        fill="#9ca3af" letter-spacing="1.4">HTTP REQUEST / RESPONSE PATH</text>
+  <rect x="40" y="140" width="6" height="280" rx="3" fill="#3b82f6"/>
+  <text x="60" y="184" font-size="11" font-style="italic" fill="#6b7280">
+    Client publishes the failing task; Flask returns 202 immediately
+  </text>
+
+  <!-- ============================================================ -->
+  <!-- BOX 1: CLIENT -->
+  <!-- ============================================================ -->
+  <g>
+    <rect x="80" y="210" width="220" height="190" rx="14"
+          fill="#ffffff" stroke="#111827" stroke-width="2"/>
+    <circle cx="106" cy="236" r="14" fill="#111827"/>
+    <text x="106" y="241" text-anchor="middle"
+          font-size="14" font-weight="700" fill="#ffffff">1</text>
+    <text x="190" y="246" text-anchor="middle"
+          font-size="18" font-weight="700" fill="#111827">CLIENT</text>
+    <text x="190" y="266" text-anchor="middle"
+          font-size="11" fill="#6b7280">curl · Postman</text>
+    <line x1="100" y1="278" x2="280" y2="278" stroke="#e5e7eb" stroke-width="1"/>
+
+    <rect x="148" y="296" width="84" height="46" rx="6" fill="#0f172a"/>
+    <rect x="153" y="301" width="74" height="36" rx="3" fill="#1e293b"/>
+    <circle cx="161" cy="307" r="1.5" fill="#22c55e"/>
+    <circle cx="166" cy="307" r="1.5" fill="#facc15"/>
+    <circle cx="171" cy="307" r="1.5" fill="#ef4444"/>
+    <text x="190" y="324" text-anchor="middle"
+          font-size="9" font-family="Menlo, Consolas, monospace" fill="#cbd5e1">curl</text>
+
+    <text x="190" y="362" text-anchor="middle"
+          font-size="12" fill="#374151">POST /tasks with</text>
+    <text x="190" y="378" text-anchor="middle"
+          font-size="11" font-family="Menlo, Consolas, monospace" fill="#111827">{"fail_until": 99}</text>
+  </g>
+
+  <!-- Arrow forward: Client -> Flask -->
+  <line class="flow" x1="304" y1="280" x2="420" y2="280"
+        stroke="#1f2937" stroke-width="2" marker-end="url(#arrowFwd)"/>
+  <text x="362" y="268" text-anchor="middle"
+        font-size="12" font-weight="600" fill="#1f2937">HTTP request</text>
+
+  <!-- Arrow return: Flask -> Client -->
+  <line class="flow" x1="420" y1="320" x2="304" y2="320"
+        stroke="#6b7280" stroke-width="1.5" stroke-dasharray="6 4"
+        marker-end="url(#arrowRet)"/>
+  <text x="362" y="312" text-anchor="middle"
+        font-size="12" font-weight="600" fill="#6b7280">HTTP response</text>
+  <g>
+    <rect x="340" y="326" width="44" height="16" rx="3" fill="#dcfce7"/>
+    <text x="362" y="338" text-anchor="middle"
+          font-size="10" font-weight="700" fill="#15803d">202</text>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- BOX 2: FLASK API -->
+  <!-- ============================================================ -->
+  <g>
+    <rect x="430" y="210" width="280" height="190" rx="14"
+          fill="#ffffff" stroke="#111827" stroke-width="2"/>
+    <circle cx="456" cy="236" r="14" fill="#111827"/>
+    <text x="456" y="241" text-anchor="middle"
+          font-size="14" font-weight="700" fill="#ffffff">2</text>
+    <text x="570" y="246" text-anchor="middle"
+          font-size="18" font-weight="700" fill="#111827">FLASK API</text>
+    <text x="570" y="266" text-anchor="middle"
+          font-size="11" fill="#6b7280">publishes failing task</text>
+    <line x1="450" y1="278" x2="690" y2="278" stroke="#e5e7eb" stroke-width="1"/>
+
+    <g>
+      <rect x="450" y="290" width="118" height="22" rx="4"
+            fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+      <text x="509" y="305" text-anchor="middle"
+            font-size="11" font-family="Menlo, Consolas, monospace" fill="#3730a3">POST /tasks</text>
+      <rect x="572" y="290" width="118" height="22" rx="4"
+            fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+      <text x="631" y="305" text-anchor="middle"
+            font-size="11" font-family="Menlo, Consolas, monospace" fill="#374151">GET  /</text>
+    </g>
+
+    <rect x="450" y="322" width="240" height="68" rx="4" fill="#0d1117"/>
+    <text x="458" y="338" font-size="10" font-family="Menlo, Consolas, monospace" fill="#7ee787">
+      <tspan fill="#6e7681"># publish to RabbitMQ</tspan>
+    </text>
+    <text x="458" y="352" font-size="10" font-family="Menlo, Consolas, monospace" fill="#7ee787">
+      flaky_task.<tspan fill="#f1fa8c">apply_async</tspan>(
+    </text>
+    <text x="458" y="366" font-size="10" font-family="Menlo, Consolas, monospace" fill="#7ee787">
+      &#160;&#160;args=[task_id, fail_until])
+    </text>
+    <text x="458" y="380" font-size="10" font-family="Menlo, Consolas, monospace" fill="#7ee787">
+      <tspan fill="#6e7681"># return 202 immediately</tspan>
+    </text>
+  </g>
+
+  <!-- Arrow: Flask -> RabbitMQ -->
+  <line class="flow" x1="714" y1="280" x2="820" y2="280"
+        stroke="#1f2937" stroke-width="2" marker-end="url(#arrowFwd)"/>
+  <text x="767" y="268" text-anchor="middle"
+        font-size="12" font-weight="600" fill="#1f2937">publish</text>
+
+  <!-- ============================================================ -->
+  <!-- BOX 3: RABBITMQ BROKER -->
+  <!-- ============================================================ -->
+  <g>
+    <rect x="830" y="210" width="220" height="190" rx="14"
+          fill="#ffffff" stroke="#111827" stroke-width="2"/>
+    <circle cx="856" cy="236" r="14" fill="#111827"/>
+    <text x="856" y="241" text-anchor="middle"
+          font-size="14" font-weight="700" fill="#ffffff">3</text>
+    <text x="940" y="246" text-anchor="middle"
+          font-size="18" font-weight="700" fill="#111827">RABBITMQ</text>
+    <text x="940" y="266" text-anchor="middle"
+          font-size="11" fill="#6b7280">broker</text>
+    <line x1="850" y1="278" x2="1030" y2="278" stroke="#e5e7eb" stroke-width="1"/>
+
+    <rect x="850" y="294" width="180" height="34" rx="4"
+          fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="868" y="312" font-size="11" font-family="Menlo, Consolas, monospace" fill="#92400e">
+      celery
+    </text>
+    <circle cx="1010" cy="311" r="9" fill="#16a34a"/>
+    <text x="1010" y="315" text-anchor="middle"
+          font-size="11" font-weight="700" fill="#ffffff">D</text>
+    <text x="940" y="348" text-anchor="middle"
+          font-size="10" fill="#374151" font-weight="600">durable queue</text>
+
+    <text x="940" y="372" text-anchor="middle"
+          font-size="11" fill="#6b7280">port 5672</text>
+    <text x="940" y="388" text-anchor="middle"
+          font-size="11" fill="#6b7280">survives restart</text>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- BOX 4: CELERY WORKER + RETRY LOOP -->
+  <!-- ============================================================ -->
+  <rect x="40" y="450" width="1240" height="320" rx="18"
+        fill="#f0fdf4" stroke="#86efac" stroke-width="1" stroke-dasharray="4 4"/>
+  <text x="60" y="476" font-size="11" font-weight="700"
+        fill="#15803d" letter-spacing="1.4">WORKER EXECUTION PATH  ·  with retry loop</text>
+  <rect x="40" y="450" width="6" height="320" rx="3" fill="#22c55e"/>
+  <text x="60" y="494" font-size="11" font-style="italic" fill="#15803d">
+    Worker catches TransientError, schedules a delayed retry, runs again, catches again, doubles the delay
+  </text>
+
+  <!-- Arrow: RabbitMQ -> Worker (consume) -->
+  <path class="flow" d="M 940 404 L 940 540"
+        fill="none" stroke="#15803d" stroke-width="2"
+        marker-end="url(#arrowBg)"/>
+  <g>
+    <rect x="848" y="450" width="184" height="22" rx="11" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+    <text x="940" y="465" text-anchor="middle"
+          font-size="12" font-weight="700" fill="#15803d">consume (prefetch=1)</text>
+  </g>
+
+  <!-- Worker box (left half) -->
+  <g>
+    <rect x="120" y="540" width="640" height="200" rx="14"
+          fill="#ffffff" stroke="#15803d" stroke-width="2"/>
+    <circle cx="146" cy="566" r="14" fill="#15803d"/>
+    <text x="146" y="571" text-anchor="middle"
+          font-size="14" font-weight="700" fill="#ffffff">4</text>
+    <text x="440" y="576" text-anchor="middle"
+          font-size="18" font-weight="700" fill="#111827">CELERY WORKER</text>
+    <text x="440" y="596" text-anchor="middle"
+          font-size="11" fill="#15803d">flaky_task with retry decorator</text>
+    <line x1="140" y1="608" x2="740" y2="608" stroke="#e5e7eb" stroke-width="1"/>
+
+    <!-- Decorator block -->
+    <rect x="140" y="620" width="600" height="100" rx="6"
+          fill="#0d1117"/>
+    <text x="150" y="638" font-size="10" font-family="Menlo, Consolas, monospace" fill="#79c0ff">
+      @celery.task(
+    </text>
+    <text x="160" y="654" font-size="10" font-family="Menlo, Consolas, monospace" fill="#7ee787">
+      autoretry_for=(TransientError,),
+    </text>
+    <text x="160" y="670" font-size="10" font-family="Menlo, Consolas, monospace" fill="#7ee787">
+      retry_backoff=<tspan fill="#ff7b72">True</tspan>, retry_backoff_max=60, retry_jitter=<tspan fill="#ff7b72">True</tspan>,
+    </text>
+    <text x="160" y="686" font-size="10" font-family="Menlo, Consolas, monospace" fill="#7ee787">
+      max_retries=5, acks_late=<tspan fill="#ff7b72">True</tspan>,
+    </text>
+    <text x="150" y="702" font-size="10" font-family="Menlo, Consolas, monospace" fill="#79c0ff">
+      )
+    </text>
+    <text x="150" y="718" font-size="10" font-family="Menlo, Consolas, monospace" fill="#7ee787">
+      <tspan fill="#6e7681">def flaky_task(self, task_id, fail_until):</tspan>
+    </text>
+  </g>
+
+  <!-- Retry arrow loop on the right of the worker -->
+  <g>
+    <path class="retry-loop" d="M 760 620 L 1100 620 L 1100 540 L 760 540 Z"
+          fill="none" stroke="#b91c1c" stroke-width="2.5"
+          marker-end="url(#arrowRetry)"/>
+    <rect x="970" y="568" width="130" height="22" rx="11" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+    <text x="1035" y="583" text-anchor="middle"
+          font-size="11" font-weight="700" fill="#b91c1c">retry with backoff</text>
+    <text x="920" y="652" text-anchor="middle"
+          font-size="11" font-weight="700" fill="#b91c1c">exponential delay</text>
+    <text x="920" y="668" text-anchor="middle"
+          font-size="10" font-family="Menlo, Consolas, monospace" fill="#b91c1c">1s → 2s → 4s → 8s → 16s</text>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- BOX 5: RETRY OUTCOMES (right) -->
+  <!-- ============================================================ -->
+  <g>
+    <rect x="1130" y="540" width="120" height="200" rx="14"
+          fill="#ffffff" stroke="#b91c1c" stroke-width="2"/>
+    <circle cx="1156" cy="566" r="14" fill="#b91c1c"/>
+    <text x="1156" y="571" text-anchor="middle"
+          font-size="14" font-weight="700" fill="#ffffff">5</text>
+    <text x="1190" y="576" text-anchor="middle"
+          font-size="14" font-weight="700" fill="#111827">RETRIES</text>
+    <line x1="1145" y1="588" x2="1235" y2="588" stroke="#e5e7eb" stroke-width="1"/>
+
+    <text x="1190" y="610" text-anchor="middle"
+          font-size="11" fill="#374151">max_retries = 5</text>
+    <text x="1190" y="630" text-anchor="middle"
+          font-size="11" fill="#374151">→ 6 total tries</text>
+
+    <line x1="1145" y1="650" x2="1235" y2="650" stroke="#e5e7eb" stroke-width="1"/>
+
+    <text x="1190" y="672" text-anchor="middle"
+          font-size="11" font-weight="700" fill="#15803d">success</text>
+    <text x="1190" y="690" text-anchor="middle"
+          font-size="10" fill="#6b7280">attempts &lt; fail_until</text>
+
+    <line x1="1145" y1="704" x2="1235" y2="704" stroke="#e5e7eb" stroke-width="1"/>
+
+    <text x="1190" y="724" text-anchor="middle"
+          font-size="11" font-weight="700" fill="#b91c1c">failed</text>
+    <text x="1190" y="740" text-anchor="middle"
+          font-size="10" fill="#6b7280">after max_retries</text>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- TIMELINE — bottom row -->
+  <!-- ============================================================ -->
+  <g transform="translate(40, 800)">
+    <text x="0" y="0" font-size="11" font-weight="700"
+          fill="#6b7280" letter-spacing="1.4">RETRY TIMELINE</text>
+    <line x1="60" y1="22" x2="1220" y2="22" stroke="#d1d5db" stroke-width="2"/>
+
+    <circle cx="60" cy="22" r="5" fill="#3b82f6"/>
+    <text x="60" y="48" text-anchor="middle"
+          font-size="10" font-weight="600" fill="#374151">t = 0</text>
+    <text x="60" y="62" text-anchor="middle"
+          font-size="9" fill="#9ca3af">attempt 1</text>
+
+    <circle cx="180" cy="22" r="5" fill="#b91c1c"/>
+    <text x="180" y="48" text-anchor="middle"
+          font-size="10" font-weight="600" fill="#b91c1c">+1s</text>
+    <text x="180" y="62" text-anchor="middle"
+          font-size="9" fill="#9ca3af">attempt 2</text>
+
+    <circle cx="340" cy="22" r="5" fill="#b91c1c"/>
+    <text x="340" y="48" text-anchor="middle"
+          font-size="10" font-weight="600" fill="#b91c1c">+2s</text>
+    <text x="340" y="62" text-anchor="middle"
+          font-size="9" fill="#9ca3af">attempt 3</text>
+
+    <circle cx="560" cy="22" r="5" fill="#b91c1c"/>
+    <text x="560" y="48" text-anchor="middle"
+          font-size="10" font-weight="600" fill="#b91c1c">+4s</text>
+    <text x="560" y="62" text-anchor="middle"
+          font-size="9" fill="#9ca3af">attempt 4</text>
+
+    <circle cx="840" cy="22" r="5" fill="#b91c1c"/>
+    <text x="840" y="48" text-anchor="middle"
+          font-size="10" font-weight="600" fill="#b91c1c">+8s</text>
+    <text x="840" y="62" text-anchor="middle"
+          font-size="9" fill="#9ca3af">attempt 5</text>
+
+    <circle cx="1080" cy="22" r="5" fill="#b91c1c"/>
+    <text x="1080" y="48" text-anchor="middle"
+          font-size="10" font-weight="600" fill="#b91c1c">+16s</text>
+    <text x="1080" y="62" text-anchor="middle"
+          font-size="9" fill="#9ca3af">attempt 6</text>
+
+    <circle cx="1220" cy="22" r="5" fill="#15803d"/>
+    <text x="1220" y="48" text-anchor="middle"
+          font-size="10" font-weight="600" fill="#15803d">end</text>
+    <text x="1220" y="62" text-anchor="middle"
+          font-size="9" fill="#9ca3af">success or failed</text>
+
+    <!-- Wait segments colored -->
+    <rect x="60" y="17" width="120" height="10" rx="5" fill="#dbeafe"/>
+    <rect x="180" y="17" width="160" height="10" rx="5" fill="#fee2e2"/>
+    <rect x="340" y="17" width="220" height="10" rx="5" fill="#fee2e2"/>
+    <rect x="560" y="17" width="280" height="10" rx="5" fill="#fee2e2"/>
+    <rect x="840" y="17" width="240" height="10" rx="5" fill="#fee2e2"/>
+    <rect x="1080" y="17" width="140" height="10" rx="5" fill="#fee2e2"/>
+
+    <line x1="110" y1="80" x2="1100" y2="80"
+          stroke="#9ca3af" stroke-width="1" stroke-dasharray="3 3"/>
+    <text x="600" y="76" text-anchor="middle"
+          font-size="10" font-style="italic" fill="#6b7280">
+      each retry waits twice as long as the previous one — backoff doubles up to retry_backoff_max
+    </text>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- LEGEND -->
+  <!-- ============================================================ -->
+  <g transform="translate(40, 920)">
+    <text x="0" y="0" font-size="11" font-weight="700"
+          fill="#6b7280" letter-spacing="1.4">LEGEND</text>
+
+    <line class="flow" x1="0" y1="18" x2="32" y2="18"
+          stroke="#1f2937" stroke-width="2" marker-end="url(#arrowFwd)"/>
+    <text x="40" y="22" font-size="11" fill="#374151">forward flow</text>
+
+    <line class="flow" x1="160" y1="18" x2="192" y2="18"
+          stroke="#6b7280" stroke-width="1.5" stroke-dasharray="6 4"
+          marker-end="url(#arrowRet)"/>
+    <text x="200" y="22" font-size="11" fill="#374151">HTTP response</text>
+
+    <line class="flow" x1="350" y1="18" x2="382" y2="18"
+          stroke="#15803d" stroke-width="2" marker-end="url(#arrowBg)"/>
+    <text x="390" y="22" font-size="11" fill="#15803d">worker flow</text>
+
+    <line class="retry-loop" x1="540" y1="18" x2="572" y2="18"
+          stroke="#b91c1c" stroke-width="2.5" marker-end="url(#arrowRetry)"/>
+    <text x="580" y="22" font-size="11" fill="#b91c1c">retry loop</text>
+
+    <circle cx="780" cy="18" r="9" fill="#16a34a"/>
+    <text x="780" y="22" text-anchor="middle"
+          font-size="10" font-weight="700" fill="#ffffff">D</text>
+    <text x="796" y="22" font-size="11" fill="#374151">durable queue</text>
+  </g>
+
+</svg>
