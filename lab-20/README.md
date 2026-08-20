@@ -281,7 +281,6 @@ Use the first IP printed as `LB_IP`. Open the Load Balancer modal.
 
 ![](./images/hostname.png)
 
-![](./images/LoadBalancer%20setup.png)
 
 Expose one port:
 
@@ -290,6 +289,8 @@ Expose one port:
 | `LB_IP` | `5000` (Flask API) |
 
 Click **Expose**. Copy the generated `.lb.poridhi.io` URL — the rest of the lab uses it as `<FLASK-LB-URL>`.
+
+![](./images/LoadBalancer%20setup.png)
 
 ## Step 12: Trigger a failing task
 
@@ -327,34 +328,12 @@ docker compose logs -f celery
 
 The logs show six attempts in total. Each line reveals the backoff in action.
 
-Expected sequence (timings approximate, the `Retry in Ns` line comes from Celery's own retry machinery):
-
-```
-tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 1 starting
-tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 1 failed on purpose
-Task tasks.flaky_task[<uuid>] retry: Retry in 1s: TransientError('simulated failure on attempt 1')
-tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 2 starting
-tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 2 failed on purpose
-Task tasks.flaky_task[<uuid>] retry: Retry in 2s: TransientError('simulated failure on attempt 2')
-tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 3 starting
-tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 3 failed on purpose
-Task tasks.flaky_task[<uuid>] retry: Retry in 4s: TransientError('simulated failure on attempt 3')
-tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 4 starting
-tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 4 failed on purpose
-Task tasks.flaky_task[<uuid>] retry: Retry in 8s: TransientError('simulated failure on attempt 4')
-tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 5 starting
-tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 5 failed on purpose
-Task tasks.flaky_task[<uuid>] retry: Retry in 16s: TransientError('simulated failure on attempt 5')
-tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 6 starting
-tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 6 failed on purpose
-Task tasks.flaky_task[<uuid>] raised unexpected: TransientError('simulated failure on attempt 6')
-```
-
-The center of each delay doubles — 1s, 2s, 4s, 8s, 16s — but `retry_jitter=True` adds a random offset, so your live numbers may be slightly different (for example `Retry in 0s`, `2s`, `2s`, `3s`, `14s`). After six attempts the task fails permanently and Celery prints `raised unexpected: TransientError(...)` with a traceback.
-
 ![](./images/Step%2013%20Watch%20the%20worker%20retry%20the%20task_1.png)
 
 ![](./images/Step%2013%20Watch%20the%20worker%20retry%20the%20task_2.png)
+
+The center of each delay doubles — 1s, 2s, 4s, 8s, 16s — but `retry_jitter=True` adds a random offset, so your live numbers may be slightly different (for example `Retry in 0s`, `2s`, `2s`, `3s`, `14s`). After six attempts the task fails permanently and Celery prints `raised unexpected: TransientError(...)` with a traceback.
+
 
 ## Step 14: Trigger a task that recovers
 
@@ -366,6 +345,8 @@ curl -X POST <FLASK-LB-URL>/tasks \
   -d '{"fail_until": 3}'
 ```
 
+![](./images/Step%2014%20Trigger%20a%20task%20that%20recovers%20Curl.png)
+
 Follow the logs again:
 
 ```bash
@@ -374,7 +355,6 @@ docker compose logs -f celery
 
 The task fails on attempts one and two, retries, and succeeds on attempt three. The final log line reads `attempt 3 succeeded`.
 
-![](./images/Step%2014%20Trigger%20a%20task%20that%20recovers%20Curl.png)
 
 ![](./images/Step%2014%20Trigger%20a%20task%20that%20recovers%20docker%20compose_1.png)
 
@@ -462,13 +442,13 @@ The retries now happen at exactly 1s, 2s, 4s, 4s, 4s. The Celery log lines read 
 docker compose down
 ```
 
+![](./images/docker%20compose%20down.png)
+
 Add `-v` to remove the RabbitMQ volume for a clean slate:
 
 ```bash
 docker compose down -v
 ```
-
-![](./images/docker%20compose%20down.png)
 
 ## Next Steps
 
