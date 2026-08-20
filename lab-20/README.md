@@ -313,30 +313,30 @@ docker compose logs -f celery
 
 The logs show six attempts in total. Each line reveals the backoff in action.
 
-Expected sequence (timings approximate):
+Expected sequence (timings approximate, the `Retry in Ns` line comes from Celery's own retry machinery):
 
 ```
-[INFO] [Task a1b2c3d4] attempt 1 starting
-[WARNING] [Task a1b2c3d4] attempt 1 failed on purpose
-[INFO] Task ... retrying in 1s
-[INFO] [Task a1b2c3d4] attempt 2 starting
-[WARNING] [Task a1b2c3d4] attempt 2 failed on purpose
-[INFO] Task ... retrying in 2s
-[INFO] [Task a1b2c3d4] attempt 3 starting
-[WARNING] [Task a1b2c3d4] attempt 3 failed on purpose
-[INFO] Task ... retrying in 4s
-[INFO] [Task a1b2c3d4] attempt 4 starting
-[WARNING] [Task a1b2c3d4] attempt 4 failed on purpose
-[INFO] Task ... retrying in 8s
-[INFO] [Task a1b2c3d4] attempt 5 starting
-[WARNING] [Task a1b2c3d4] attempt 5 failed on purpose
-[INFO] Task ... retrying in 16s
-[INFO] [Task a1b2c3d4] attempt 6 starting
-[WARNING] [Task a1b2c3d4] attempt 6 failed on purpose
-[ERROR] Task ... failed permanently after 5 retries
+tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 1 starting
+tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 1 failed on purpose
+Task tasks.flaky_task[<uuid>] retry: Retry in 1s: TransientError('simulated failure on attempt 1')
+tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 2 starting
+tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 2 failed on purpose
+Task tasks.flaky_task[<uuid>] retry: Retry in 2s: TransientError('simulated failure on attempt 2')
+tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 3 starting
+tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 3 failed on purpose
+Task tasks.flaky_task[<uuid>] retry: Retry in 4s: TransientError('simulated failure on attempt 3')
+tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 4 starting
+tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 4 failed on purpose
+Task tasks.flaky_task[<uuid>] retry: Retry in 8s: TransientError('simulated failure on attempt 4')
+tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 5 starting
+tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 5 failed on purpose
+Task tasks.flaky_task[<uuid>] retry: Retry in 16s: TransientError('simulated failure on attempt 5')
+tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 6 starting
+tasks.flaky_task[<uuid>]: [Task a1b2c3d4] attempt 6 failed on purpose
+Task tasks.flaky_task[<uuid>] raised unexpected: TransientError('simulated failure on attempt 6')
 ```
 
-Notice the doubling delay: 1s, 2s, 4s, 8s, 16s.
+The center of each delay doubles — 1s, 2s, 4s, 8s, 16s — but `retry_jitter=True` adds a random offset, so your live numbers may be slightly different (for example `Retry in 0s`, `2s`, `2s`, `3s`, `14s`). After six attempts the task fails permanently and Celery prints `raised unexpected: TransientError(...)` with a traceback.
 
 ## Step 14: Trigger a task that recovers
 
