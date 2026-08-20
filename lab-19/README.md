@@ -26,6 +26,8 @@ docker --version
 docker compose version
 ```
 
+![](./images/End%20of%20step%202.png)
+
 ## Step 3: Create the requirements file
 
 Run this command to create `requirements.txt`:
@@ -218,6 +220,8 @@ Expected output:
 /home/poridhian/lab-19/app/tasks.py
 ```
 
+![](./images/Find%20-type%20f.png)
+
 ## Step 10: Build and start the stack
 
 ```bash
@@ -227,6 +231,9 @@ docker compose up -d --build
 
 The first run downloads three images and can take a minute. Subsequent runs are instant.
 
+![](./images/Step%2010%201.png)
+![](./images/Step%2010%202.png)
+
 ## Step 11: Wait for the broker to become healthy
 
 ```bash
@@ -234,6 +241,8 @@ docker compose ps
 ```
 
 `lab19-rabbitmq` shows `healthy` once the broker accepts AMQP connections.
+
+![](./images/Step%2014%20docker%20compose%20ps.png)
 
 ## Step 12: Open the Load Balancer modal in the lab UI
 
@@ -251,7 +260,7 @@ Sample output:
 
 Use the first IP printed as `LB_IP`. Open the Load Balancer modal.
 
-![](./images/load-balancer-modal.png)
+![](./images/Hostname.png)
 
 Expose two ports, one at a time:
 
@@ -262,6 +271,8 @@ Expose two ports, one at a time:
 
 The modal lists each route after you click **Expose**. Click the generated `.lb.poridhi.io` URL to open the service in a new tab.
 
+![](./images/Expose%20port.png)
+
 ## Step 13: Log in to the RabbitMQ Management UI
 
 Open the `.lb.poridhi.io` URL for port 15672. Login with:
@@ -270,6 +281,8 @@ Open the `.lb.poridhi.io` URL for port 15672. Login with:
 - Password: `guest`
 
 The dashboard shows three sections at the top: Overview, Connections, Channels. The queue view is empty for now.
+
+![](./images/Step%2013.png)
 
 ## Step 14: Trigger a task from curl
 
@@ -290,6 +303,8 @@ Expected response within a few milliseconds:
   "message": "Task published to RabbitMQ"
 }
 ```
+
+![](./images/Step%2014.png)
 
 ## Step 15: Inspect the queue in the Management UI
 
@@ -318,6 +333,8 @@ docker compose ps
 
 `lab19-rabbitmq` returns to `healthy`. Refresh the Management UI. The `celery` queue is still listed and still shows the **D** badge.
 
+![](./images/docker%20compose%20restart%20rabbitmq.png)
+
 ## Step 17: Verify late acks by killing the worker mid-task
 
 Trigger a longer task so you have time to kill the worker:
@@ -329,6 +346,8 @@ curl -X POST <FLASK-LB-URL>/tasks \
 ```
 
 Note the `task_id` from the response.
+
+![](./images/Trigger%20a%20longer%20task%20so%20you%20have%20time%20to%20kill%20the%20worker.png)
 
 Within two seconds, force-kill the Celery worker:
 
@@ -352,6 +371,8 @@ docker compose logs -f celery
 
 You see a new `[Task a1b2c3d4] started` line followed by `processing (1/30)`. The same `task_id`, restarted from scratch. With early acks, this task would have been silently lost.
 
+![](./images/docker%20compose%20up%20d%20celery.png)
+
 ## Step 18: Stop the stack
 
 ```bash
@@ -363,6 +384,12 @@ Add `-v` to also remove the RabbitMQ volume for a clean slate:
 ```bash
 docker compose down -v
 ```
+
+![](./images/docker%20compose%20logs%20f%20celery.png)
+
+The Load Balancer URL now returns a 502 because the Flask container is gone:
+
+![](./images/Step%2018%20After%20docker%20compose%20down.png)
 
 ## Next Steps
 
