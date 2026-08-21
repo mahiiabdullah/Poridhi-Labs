@@ -1,136 +1,140 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 460" font-family="Helvetica, Arial, sans-serif">
+﻿<svg viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
 
-  <!-- background -->
-  <rect width="1080" height="460" fill="#ffffff"/>
-
-  <!-- title -->
-  <text x="40" y="48" font-size="22" font-weight="700" fill="#111827">Lab 20 — Celery Task Retry with Exponential Backoff</text>
-  <text x="40" y="72" font-size="13" fill="#6b7280">A failing task is re-queued automatically. Each retry waits longer than the previous one.</text>
-
-  <!-- ============ BOX 1: CLIENT ============ -->
-  <g>
-    <rect x="60" y="140" width="180" height="150" rx="10"
-          fill="#ffffff" stroke="#111827" stroke-width="2"/>
-    <text x="150" y="170" text-anchor="middle"
-          font-size="16" font-weight="700" fill="#111827">CLIENT</text>
-    <text x="150" y="190" text-anchor="middle"
-          font-size="11" fill="#6b7280">curl · browser</text>
-    <line x1="80" y1="204" x2="220" y2="204" stroke="#e5e7eb" stroke-width="1"/>
-
-    <rect x="90" y="220" width="120" height="30" rx="4" fill="#0f172a"/>
-    <text x="150" y="240" text-anchor="middle"
-          font-size="11" font-family="Menlo, Consolas, monospace" fill="#cbd5e1">POST /tasks</text>
-
-    <text x="150" y="272" text-anchor="middle" font-size="11" fill="#374151">gets 202 back</text>
-    <text x="150" y="286" text-anchor="middle" font-size="11" fill="#374151">in milliseconds</text>
-  </g>
-
-  <!-- arrow: client -> flask -->
-  <line x1="242" y1="200" x2="338" y2="200"
-        stroke="#1f2937" stroke-width="2" marker-end="url(#a)"/>
-  <text x="290" y="190" text-anchor="middle" font-size="11" fill="#374151">request</text>
-  <line x1="338" y1="232" x2="242" y2="232"
-        stroke="#6b7280" stroke-width="1.5" stroke-dasharray="5 4"
-        marker-end="url(#ar)"/>
-  <text x="290" y="248" text-anchor="middle" font-size="11" fill="#6b7280">202</text>
-
-  <!-- ============ BOX 2: FLASK API ============ -->
-  <g>
-    <rect x="340" y="140" width="220" height="150" rx="10"
-          fill="#ffffff" stroke="#111827" stroke-width="2"/>
-    <text x="450" y="170" text-anchor="middle"
-          font-size="16" font-weight="700" fill="#111827">FLASK API</text>
-    <text x="450" y="190" text-anchor="middle"
-          font-size="11" fill="#6b7280">web container · port 5000</text>
-    <line x1="360" y1="204" x2="540" y2="204" stroke="#e5e7eb" stroke-width="1"/>
-
-    <rect x="360" y="220" width="180" height="55" rx="4" fill="#0d1117"/>
-    <text x="370" y="238" font-size="10" font-family="Menlo, Consolas, monospace" fill="#7ee787">flaky_task</text>
-    <text x="378" y="252" font-size="10" font-family="Menlo, Consolas, monospace" fill="#f1fa8c">  .apply_async(args=...)</text>
-    <text x="370" y="266" font-size="9" font-family="Menlo, Consolas, monospace" fill="#6e7681"># publishes the failing task</text>
-  </g>
-
-  <!-- arrow: flask -> rabbitmq -->
-  <line x1="562" y1="200" x2="658" y2="200"
-        stroke="#1f2937" stroke-width="2" marker-end="url(#a)"/>
-  <text x="610" y="190" text-anchor="middle" font-size="11" fill="#374151">AMQP</text>
-
-  <!-- ============ BOX 3: RABBITMQ ============ -->
-  <g>
-    <rect x="660" y="140" width="200" height="150" rx="10"
-          fill="#ffffff" stroke="#111827" stroke-width="2"/>
-    <text x="760" y="170" text-anchor="middle"
-          font-size="16" font-weight="700" fill="#111827">RABBITMQ</text>
-    <text x="760" y="190" text-anchor="middle"
-          font-size="11" fill="#6b7280">broker</text>
-    <line x1="680" y1="204" x2="840" y2="204" stroke="#e5e7eb" stroke-width="1"/>
-
-    <rect x="690" y="222" width="140" height="30" rx="4"
-          fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
-    <text x="710" y="242" font-size="12" font-family="Menlo, Consolas, monospace" fill="#92400e">celery</text>
-    <circle cx="814" cy="237" r="10" fill="#16a34a"/>
-    <text x="814" y="241" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">D</text>
-    <text x="760" y="272" text-anchor="middle" font-size="11" fill="#374151">durable queue</text>
-  </g>
-
-  <!-- arrow: rabbitmq -> worker (downward) -->
-  <line x1="760" y1="292" x2="760" y2="350"
-        stroke="#15803d" stroke-width="2" marker-end="url(#ag)"/>
-  <text x="772" y="324" font-size="11" fill="#15803d">deliver</text>
-
-  <!-- ============ BOX 4: CELERY WORKER ============ -->
-  <g>
-    <rect x="120" y="352" width="540" height="80" rx="10"
-          fill="#ffffff" stroke="#15803d" stroke-width="2"/>
-    <text x="390" y="376" text-anchor="middle"
-          font-size="15" font-weight="700" fill="#111827">CELERY WORKER</text>
-    <text x="390" y="394" text-anchor="middle"
-          font-size="11" fill="#15803d">runs flaky_task — catches TransientError and retries automatically</text>
-    <text x="390" y="412" text-anchor="middle"
-          font-size="11" font-family="Menlo, Consolas, monospace" fill="#6b7280">autoretry_for=(TransientError,)  ·  retry_backoff=True  ·  max_retries=5</text>
-  </g>
-
-  <!-- retry loop arrow (right side, red) -->
-  <path d="M 660 392 L 870 392 L 870 392 L 880 392"
-        fill="none"/>
-  <path d="M 660 380 L 880 380 L 880 408 L 660 408"
-        fill="none" stroke="#b91c1c" stroke-width="2" stroke-dasharray="5 4"
-        marker-end="url(#arr)"/>
-  <text x="770" y="374" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">retry with backoff</text>
-  <text x="770" y="425" text-anchor="middle" font-size="10" font-family="Menlo, Consolas, monospace" fill="#b91c1c">1s → 2s → 4s → 8s → 16s</text>
-
-  <!-- failure arrow off to the right -->
-  <g>
-    <rect x="900" y="352" width="120" height="80" rx="10"
-          fill="#ffffff" stroke="#b91c1c" stroke-width="2"/>
-    <text x="960" y="376" text-anchor="middle"
-          font-size="14" font-weight="700" fill="#111827">OUTCOME</text>
-    <line x1="910" y1="386" x2="1010" y2="386" stroke="#e5e7eb" stroke-width="1"/>
-    <text x="960" y="402" text-anchor="middle"
-          font-size="11" font-weight="700" fill="#15803d">success</text>
-    <text x="960" y="418" text-anchor="middle"
-          font-size="11" font-weight="700" fill="#b91c1c">or failed</text>
-  </g>
-
-  <!-- bottom note -->
-  <text x="40" y="455" font-size="11" fill="#374151" font-style="italic">
-    After max_retries the task fails permanently and the exception is raised for real.
-  </text>
-
-  <!-- arrow marker defs -->
   <defs>
-    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2937"/>
+    <marker id="arrowNormal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333333"/>
     </marker>
-    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
+    <marker id="arrowRetry" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0e7490"/>
     </marker>
-    <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#15803d"/>
-    </marker>
-    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b91c1c"/>
+    <marker id="arrowFail" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
     </marker>
   </defs>
+
+  <!-- ===================== MAIN FLOW ROW ===================== -->
+  <!-- Flask -->
+  <rect x="70" y="130" width="200" height="130" rx="14" fill="#fafafa" stroke="#333333" stroke-width="1.5"/>
+  <g transform="translate(170,175)">
+    <path d="M-12,-22 L-12,-4 L-25,20 A5,5 0 0 0 -20,27 L20,27 A5,5 0 0 0 25,20 L12,-4 L12,-22 Z" fill="none" stroke="#333333" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="-15" y1="-22" x2="15" y2="-22" stroke="#333333" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <text x="170" y="230" text-anchor="middle" font-size="16" font-weight="700" fill="#1a1a2e">Flask API</text>
+  <text x="170" y="249" text-anchor="middle" font-size="12" fill="#777777">POST /tasks</text>
+
+  <line x1="270" y1="195" x2="374" y2="195" stroke="#333333" stroke-width="2" stroke-dasharray="8,6" marker-end="url(#arrowNormal)">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/>
+  </line>
+  <text x="322" y="184" text-anchor="middle" font-size="12" fill="#444444">publish</text>
+
+  <!-- RabbitMQ -->
+  <rect x="380" y="130" width="260" height="130" rx="14" fill="#fafafa" stroke="#333333" stroke-width="1.5"/>
+  <g transform="translate(430,195)">
+    <path d="M0,-16 L16,0 L0,16 L-16,0 Z" fill="none" stroke="#333333" stroke-width="2" stroke-linejoin="round"/>
+  </g>
+  <text x="530" y="188" text-anchor="middle" font-size="16" font-weight="700" fill="#1a1a2e">RabbitMQ</text>
+  <text x="530" y="207" text-anchor="middle" font-size="12" fill="#777777">task queue</text>
+  <text x="530" y="235" text-anchor="middle" font-size="12" fill="#999999">holds &amp; delivers tasks</text>
+
+  <line x1="640" y1="195" x2="744" y2="195" stroke="#333333" stroke-width="2" stroke-dasharray="8,6" marker-end="url(#arrowNormal)">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/>
+  </line>
+  <text x="692" y="184" text-anchor="middle" font-size="12" fill="#444444">deliver</text>
+
+  <!-- Celery Worker -->
+  <rect x="750" y="130" width="220" height="130" rx="14" fill="#fafafa" stroke="#333333" stroke-width="1.5"/>
+  <g transform="translate(860,175)">
+    <circle cx="0" cy="0" r="11" fill="none" stroke="#333333" stroke-width="2"/>
+    <g stroke="#333333" stroke-width="2">
+      <line x1="0" y1="-18" x2="0" y2="-13"/>
+      <line x1="0" y1="18" x2="0" y2="13"/>
+      <line x1="-18" y1="0" x2="-13" y2="0"/>
+      <line x1="18" y1="0" x2="13" y2="0"/>
+      <line x1="-13" y1="-13" x2="-9" y2="-9"/>
+      <line x1="13" y1="13" x2="9" y2="9"/>
+      <line x1="-13" y1="13" x2="-9" y2="9"/>
+      <line x1="13" y1="-13" x2="9" y2="-9"/>
+    </g>
+  </g>
+  <text x="860" y="230" text-anchor="middle" font-size="16" font-weight="700" fill="#1a1a2e">Celery Worker</text>
+  <text x="860" y="249" text-anchor="middle" font-size="12" fill="#777777">executes the task</text>
+
+  <!-- Docker boundary -->
+  <rect x="40" y="98" width="960" height="200" rx="14" fill="none" stroke="#bbbbbb" stroke-width="1.3" stroke-dasharray="6,5"/>
+  <text x="60" y="118" font-size="12" fill="#999999">Docker Compose</text>
+
+  <!-- Arrow worker -> decision -->
+  <line x1="860" y1="260" x2="860" y2="330" stroke="#333333" stroke-width="2" stroke-dasharray="8,6" marker-end="url(#arrowNormal)">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/>
+  </line>
+
+  <!-- ===================== DECISION ===================== -->
+  <polygon points="860,332 925,378 860,424 795,378" fill="#ffffff" stroke="#333333" stroke-width="1.6"/>
+  <text x="860" y="372" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a2e">task</text>
+  <text x="860" y="388" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a2e">failed?</text>
+
+  <!-- NO -> success -->
+  <line x1="925" y1="378" x2="1024" y2="378" stroke="#333333" stroke-width="2" stroke-dasharray="8,6" marker-end="url(#arrowNormal)">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/>
+  </line>
+  <text x="965" y="368" text-anchor="middle" font-size="12" fill="#444444">no</text>
+
+  <rect x="1030" y="332" width="260" height="92" rx="14" fill="#f2faf5" stroke="#15803d" stroke-width="1.6"/>
+  <g transform="translate(1065,378)">
+    <circle cx="0" cy="0" r="14" fill="none" stroke="#15803d" stroke-width="2"/>
+    <path d="M-6,0 L-2,5 L7,-6" fill="none" stroke="#15803d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="1180" y="372" text-anchor="middle" font-size="15" font-weight="700" fill="#1a1a2e">Success</text>
+  <text x="1180" y="392" text-anchor="middle" font-size="12" fill="#4a7a5a">task completed</text>
+
+  <!-- YES -> retry -->
+  <line x1="860" y1="424" x2="860" y2="480" stroke="#0e7490" stroke-width="2.2" stroke-dasharray="8,6" marker-end="url(#arrowRetry)">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/>
+  </line>
+  <text x="885" y="456" font-size="12" fill="#0e7490" font-weight="600">yes</text>
+
+  <!-- ===================== RETRY / BACKOFF ===================== -->
+  <rect x="640" y="486" width="440" height="180" rx="16" fill="#f8fcfd" stroke="#0e7490" stroke-width="1.8"/>
+  <text x="860" y="518" text-anchor="middle" font-size="17" font-weight="700" fill="#0e7490">Automatic Retry</text>
+  <text x="860" y="538" text-anchor="middle" font-size="12.5" fill="#3a7a86">wait time doubles after each failure</text>
+
+  <!-- delay steps -->
+  <g font-size="12" fill="#1a1a2e" text-anchor="middle" font-weight="600">
+    <rect x="672" y="566" width="46" height="20" rx="4" fill="#d7edf1" stroke="#0e7490" stroke-width="1"/>
+    <text x="695" y="580">1s</text>
+    <rect x="736" y="560" width="52" height="26" rx="4" fill="#c3e4ea" stroke="#0e7490" stroke-width="1"/>
+    <text x="762" y="577">2s</text>
+    <rect x="806" y="552" width="58" height="34" rx="4" fill="#aed9e2" stroke="#0e7490" stroke-width="1"/>
+    <text x="835" y="573">4s</text>
+    <rect x="882" y="542" width="64" height="44" rx="4" fill="#96cbd7" stroke="#0e7490" stroke-width="1"/>
+    <text x="914" y="568">8s</text>
+    <rect x="964" y="530" width="70" height="56" rx="4" fill="#7dbccb" stroke="#0e7490" stroke-width="1"/>
+    <text x="999" y="562">16s</text>
+  </g>
+
+  <text x="860" y="620" text-anchor="middle" font-size="12.5" fill="#444444">tries up to</text>
+  <text x="860" y="644" text-anchor="middle" font-size="15" font-weight="700" fill="#0e7490">5 retries &#8194;(6 attempts total)</text>
+
+  <!-- retry loop: leaves the Automatic Retry block from the top-left, climbs straight up the corridor beside the decision diamond, then turns right and re-enters the Celery Worker at the bottom-left corner -->
+  <path d="M 660,486 L 660,240 L 748,240"
+        fill="none" stroke="#0e7490" stroke-width="2.4" stroke-dasharray="8,6" marker-end="url(#arrowRetry)">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/>
+  </path>
+  <text x="643" y="400" font-size="14" fill="#0e7490" font-weight="700" transform="rotate(-90 643 400)" text-anchor="middle">retry</text>
+
+  <!-- ===================== PERMANENT FAILURE ===================== -->
+  <line x1="860" y1="666" x2="860" y2="712" stroke="#b91c1c" stroke-width="2" stroke-dasharray="8,6" marker-end="url(#arrowFail)">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/>
+  </line>
+  <text x="885" y="694" font-size="12" fill="#b91c1c" font-weight="600">limit reached</text>
+
+  <rect x="640" y="718" width="440" height="90" rx="16" fill="#fdf3f3" stroke="#b91c1c" stroke-width="1.6"/>
+  <g transform="translate(676,760)">
+    <path d="M0,-12 L12,10 L-12,10 Z" fill="none" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="0" y1="-3" x2="0" y2="3" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="0" cy="6.5" r="1.3" fill="#b91c1c"/>
+  </g>
+  <text x="880" y="756" text-anchor="middle" font-size="15" font-weight="700" fill="#1a1a2e">Permanent Failure</text>
+  <text x="880" y="776" text-anchor="middle" font-size="12" fill="#8a4a4a">no more automatic retries</text>
 
 </svg>
