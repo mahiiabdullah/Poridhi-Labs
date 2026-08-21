@@ -6,8 +6,6 @@ This lab adds automatic retry behavior to Celery tasks. When a task raises an ex
 
 ## Architecture
 
-### Request Flow
-
 <p align="center"><img src="./images/architecture.svg" alt="Lab 20 Architecture"></p>
 
 ## What You Will Build
