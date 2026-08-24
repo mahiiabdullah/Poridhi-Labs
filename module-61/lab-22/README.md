@@ -80,12 +80,12 @@ cat > ~/lab-22/app/requirements.txt << 'EOF'
 flask==3.0.3
 celery==5.4.0
 kombu==5.3.7
-setuptools>=68
+setuptools>=68,<81
 supervisor==4.2.5
 EOF
 ```
 
-`setuptools` provides `pkg_resources`, which `supervisor==4.2.5` imports at startup. The `python:3.12-slim` base image no longer ships `setuptools`, so it has to be installed explicitly.
+`setuptools` provides `pkg_resources`, which `supervisor==4.2.5` imports at startup. The `python:3.12-slim` base image no longer ships `setuptools`, so it has to be installed explicitly. The upper bound `<81` matters: `setuptools==81.0.0` removed `pkg_resources`, so without the cap `pip` would resolve to a newer version that leaves `supervisord` unable to import `pkg_resources`.
 
 ### Step 5: Write `supervisord.conf`
 
