@@ -80,9 +80,12 @@ cat > ~/lab-22/app/requirements.txt << 'EOF'
 flask==3.0.3
 celery==5.4.0
 kombu==5.3.7
+setuptools>=68
 supervisor==4.2.5
 EOF
 ```
+
+`setuptools` provides `pkg_resources`, which `supervisor==4.2.5` imports at startup. The `python:3.12-slim` base image no longer ships `setuptools`, so it has to be installed explicitly.
 
 ### Step 5: Write `supervisord.conf`
 
@@ -256,6 +259,8 @@ EOF
 cd ~/lab-22/app
 docker compose up -d --build
 ```
+
+`--build` is required so the image rebuild picks up the new `requirements.txt` from Step 4. Without it the image cache keeps the old layer without `setuptools` and `supervisord` exits with `ModuleNotFoundError: No module named 'pkg_resources'`.
 
 ### Step 12: Confirm both programs are running
 
