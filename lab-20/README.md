@@ -5,7 +5,6 @@
 This lab adds automatic retry behavior to Celery tasks. When a task raises an exception, Celery re-runs it automatically after a delay that grows exponentially. After a configured number of attempts the task fails permanently.
 
 ## Architecture
-
 <p align="center"><img src="./images/architecture.svg" alt="Lab 20 Architecture"></p>
 
 ## What You Will Build
