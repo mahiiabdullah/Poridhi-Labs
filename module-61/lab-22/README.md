@@ -257,10 +257,11 @@ EOF
 
 ```bash
 cd ~/lab-22/app
-docker compose up -d --build
+docker compose build --no-cache
+docker compose up -d
 ```
 
-`--build` is required so the image rebuild picks up the new `requirements.txt` from Step 4. Without it the image cache keeps the old layer without `setuptools` and `supervisord` exits with `ModuleNotFoundError: No module named 'pkg_resources'`.
+`--no-cache` forces a clean image build so the new `requirements.txt` from Step 4 always lands in the image layer. A plain `--build` is not enough on some hosts — BuildKit can reuse the old `pip install` layer even after `requirements.txt` changes, which leaves the image without `setuptools` and `supervisord` exits with `ModuleNotFoundError: No module named 'pkg_resources'`.
 
 ### Step 12: Confirm both programs are running
 
