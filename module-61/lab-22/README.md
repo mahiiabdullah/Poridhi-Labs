@@ -1,49 +1,28 @@
-# Lab 22: Managing Celery Workers with `supervisord`
+# Lab 22: Running the Celery Worker under `supervisord` or `systemd`
 
-## Module 61 — Deployment and Monitoring
+**Module 61 — Deployment and Monitoring**
 
-This lab consolidates the Flask API and Celery worker into a single container. `supervisord` runs as PID 1 and starts both processes. If either crashes, `supervisord` restarts it automatically. `supervisorctl` lets you stop, start, and restart individual programs from outside the container without entering a shell. Per-process log files are written inside the container and mounted to the host so you can tail them directly.
-
----
-
+This lab takes the Celery worker out of the foreground `docker compose up` and runs it under a real process supervisor. You do the lab twice — once with `supervisord` inside a single app container, and once with `systemd` on the host. Both forms auto-restart the worker on crash and bring it back up on reboot. The Flask API keeps publishing tasks; the queue keeps draining, even if no one is logged in.
 
 ## Architecture
 
-![Lab 22 Architecture](./images/architecture.svg)
-
-A single `app` container runs `supervisord` as PID 1. Two child programs are supervised:
-
-* **`web`** — Flask API on port `5000`.
-* **`celery`** — Celery worker that consumes tasks from RabbitMQ.
-
-RabbitMQ itself runs in the separate broker stack from Lab 21 on the `lab22-broker-net` Docker network.
-
-## Concept
-
-| Term                       | Description                                                                                                |
-|----------------------------|------------------------------------------------------------------------------------------------------------|
-| Flower                     | A web-based tool for monitoring and administrating Celery clusters.                                        |
-| Nginx                      | A web server acting as a reverse proxy to forward client requests to internal services.                   |
-| Reverse Proxy              | A server that sits in front of backend applications and intercepts external requests.                      |
-| HTTP Basic Authentication  | A method for an HTTP user agent to provide a username and password when making a request.                 |
-
-A reverse proxy acts as an intermediary for requests from clients seeking resources from servers. Instead of exposing Flower directly to the internet, Nginx intercepts incoming HTTP traffic on port 80, enforces authentication, and routes authorized requests to the internally hosted Flower service on port 5555.
-
----
+<p align="center"><img src="./images/architecture.svg" alt="Lab 22 Architecture"></p>
 
 ## What You Will Build
 
-A single `app` container where `supervisord` manages two programs: `web` (Flask) and `celery` (Celery worker). RabbitMQ runs in a separate broker stack as in Lab 21. You interact with `supervisord` using `docker exec supervisorctl`, observe automatic process recovery by deliberately killing the worker mid-task, and read per-process log files from the host filesystem.
+A Flask API that publishes tasks to RabbitMQ. A Celery worker that is supervised — first by `supervisord` inside a container, then by `systemd` on the host — so it restarts automatically and starts on boot. You trigger a deliberate crash, watch the supervisor bring the worker back up, and inspect logs to confirm.
 
 ---
 
-## Part A — Broker Stack
+## Part A — supervisord inside a single container
+
+The Flask API and the Celery worker share one container. `supervisord` runs as PID 1, starts both processes, and restarts either one if it exits. Logs from each process land in a separate file inside the container.
 
 ### Step 1: Create the project directories
 
 ```bash
-mkdir -p ~/lab-22/broker ~/lab-22/app/src ~/lab-22/app/logs
-cd ~/lab-22
+mkdir -p ~/lab-22/app/src ~/lab-22/app/logs
+mkdir -p ~/lab-22/broker
 ```
 
 ### Step 2: Confirm Docker and Compose
@@ -53,11 +32,7 @@ docker --version
 docker compose version
 ```
 
-![Docker and Compose versions](./images/output-1.png)
-
 ### Step 3: Start the broker stack
-
-Write the broker compose file:
 
 ```bash
 cat > ~/lab-22/broker/docker-compose.yml << 'EOF'
@@ -90,28 +65,15 @@ networks:
 EOF
 ```
 
-Bring it up:
-
 ```bash
 cd ~/lab-22/broker
 docker compose up -d
-```
-
-![docker compose up -d output](./images/output-2.png)
-
-Wait for the healthy status:
-
-```bash
 docker compose ps
 ```
 
-![docker compose ps showing healthy](./images/output-3.png)
+`lab22-rabbitmq` shows `healthy` once it accepts AMQP.
 
----
-
-## Part B — Application Image
-
-### Step 4: Write `requirements.txt`
+### Step 4: Write the application requirements
 
 ```bash
 cat > ~/lab-22/app/requirements.txt << 'EOF'
@@ -122,9 +84,9 @@ supervisor==4.2.5
 EOF
 ```
 
-> **Note:** `supervisor` is a Python package. Installing it with pip provides both `supervisord` (the daemon) and `supervisorctl` (the control CLI).
-
 ### Step 5: Write `supervisord.conf`
+
+Two programs are supervised: `web` (Flask) and `celery` (Celery worker). `nodaemon=true` keeps `supervisord` in the foreground so Docker sees it as PID 1.
 
 ```bash
 cat > ~/lab-22/app/supervisord.conf << 'EOF'
@@ -167,17 +129,7 @@ stdout_logfile_backups=3
 EOF
 ```
 
-Key settings:
-
-| Setting                       | Effect                                                                                              |
-|-------------------------------|-----------------------------------------------------------------------------------------------------|
-| `nodaemon=true`               | Keeps `supervisord` in the foreground so Docker sees it as PID 1 and the container stays alive.      |
-| `autorestart=true`            | Restarts the program whenever it exits for any reason.                                              |
-| `startretries=5`              | Gives up after five consecutive failed start attempts and marks the program as `FATAL`.              |
-| `stdout_logfile` + `stderr_logfile` | Pointer to the same file per program so both streams appear together.                        |
-| `[unix_http_server]`          | Enables `supervisorctl` commands over a Unix socket without a TCP port or password.                  |
-
-### Step 6: Write the `Dockerfile`
+### Step 6: Write the Dockerfile
 
 ```bash
 cat > ~/lab-22/app/Dockerfile << 'EOF'
@@ -196,34 +148,7 @@ CMD ["supervisord", "-c", "/etc/supervisord.conf"]
 EOF
 ```
 
-> **Note:** `supervisord` is the container entrypoint. It starts first and launches both `web` and `celery` as child processes.
-
-### Step 7: Write `app/docker-compose.yml`
-
-```bash
-cat > ~/lab-22/app/docker-compose.yml << 'EOF'
-services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: lab22-app
-    ports:
-      - "5000:5000"
-    volumes:
-      - ./src:/code
-      - ./logs:/app/logs
-
-networks:
-  default:
-    name: lab22-broker-net
-    external: true
-EOF
-```
-
-> **Note:** A single `app` service replaces the separate `web` and `celery` services from earlier labs. The `logs` volume mounts the container log directory onto the host so you can `tail` log files without entering the container.
-
-### Step 8: Write `celery_worker.py`
+### Step 7: Write the Celery worker
 
 ```bash
 cat > ~/lab-22/app/src/celery_worker.py << 'EOF'
@@ -245,7 +170,7 @@ celery.conf.update(
 EOF
 ```
 
-### Step 9: Write `tasks.py`
+### Step 8: Write the task module
 
 ```bash
 cat > ~/lab-22/app/src/tasks.py << 'EOF'
@@ -265,7 +190,7 @@ def process_job(self, job_id: str, duration: int = 5) -> dict:
 EOF
 ```
 
-### Step 10: Write `app.py`
+### Step 9: Write the Flask API
 
 ```bash
 cat > ~/lab-22/app/src/app.py << 'EOF'
@@ -302,59 +227,51 @@ if __name__ == "__main__":
 EOF
 ```
 
-### Step 11: Verify the file layout
+### Step 10: Write `docker-compose.yml` for the app
 
 ```bash
-find ~/lab-22 -type f | sort
+cat > ~/lab-22/app/docker-compose.yml << 'EOF'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lab22-app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./src:/code
+      - ./logs:/app/logs
+
+networks:
+  default:
+    name: lab22-broker-net
+    external: true
+EOF
 ```
 
-![Final file layout under ~/lab-22](./images/output-4.png)
-
----
-
-## Part C — Run, Observe, Recover
-
-### Step 12: Build and start the container
+### Step 11: Build and start the app
 
 ```bash
 cd ~/lab-22/app
 docker compose up -d --build
 ```
 
-![docker compose up -d --build output](./images/output-5.png)
-
-### Step 13: Confirm both programs are RUNNING
+### Step 12: Confirm both programs are running
 
 ```bash
 docker exec lab22-app supervisorctl status
 ```
 
-Both programs show `RUNNING`. The PIDs confirm they are child processes of `supervisord` inside the container.
+Both `web` and `celery` show `RUNNING` as child processes of `supervisord`.
 
-![supervisorctl status — web and celery both RUNNING](./images/output-6.png)
+### Step 13: Trigger a job
 
-### Step 14: Expose ports via the Load Balancer modal
-
-Find the host IP:
+Find the host IP and expose port 5000 in the Load Balancer modal:
 
 ```bash
 hostname -I
 ```
-
-Use the first IP printed as `LB_IP`.
-
-![hostname -I output](./images/output-7.png)
-
-Open the **Load Balancer** modal in the lab UI (top-right) and expose two ports:
-
-| Enter IP   | Enter Port                                |
-|------------|-------------------------------------------|
-| `LB_IP`    | `5000` (Flask API)                        |
-| `LB_IP`    | `15672` (RabbitMQ Management UI)          |
-
-The modal lists each route after you click **Expose**. Click the generated `.lb.poridhi.io` URL for `5000` to open the Flask API in a new tab — keep that URL handy as `<FLASK-LB-URL>`.
-
-### Step 15: Trigger a job
 
 ```bash
 curl -X POST <FLASK-LB-URL>/jobs \
@@ -362,19 +279,7 @@ curl -X POST <FLASK-LB-URL>/jobs \
   -d '{"duration": 6}'
 ```
 
-Expected response:
-
-```json
-{
-  "status": "accepted",
-  "job_id": "b3c4d5e6",
-  "message": "Job published; worker managed by supervisord"
-}
-```
-
-![POST /jobs response](./images/output-8.png)
-
-### Step 16: Tail the Celery log
+Tail the worker log:
 
 ```bash
 tail -f ~/lab-22/app/logs/celery.log
@@ -382,128 +287,221 @@ tail -f ~/lab-22/app/logs/celery.log
 
 Press `Ctrl+C` to stop tailing.
 
-![Tail of celery.log](./images/output-9.png)
-
-### Step 17: Tail the Flask log
-
-```bash
-tail -f ~/lab-22/app/logs/web.log
-```
-
-Press `Ctrl+C` to stop tailing.
-
-![Tail of web.log](./images/output-10.png)
-
-### Step 18: Trigger a long-running job
-
-Submit a job that runs for 30 seconds so you have time to kill the worker:
-
-```bash
-curl -X POST <FLASK-LB-URL>/jobs \
-  -H "Content-Type: application/json" \
-  -d '{"duration": 30}'
-```
-
-Note the `job_id` from the response.
-
-![Long-running job response](./images/output-11.png)
-
-### Step 19: Kill the worker and watch it recover
-
-Within a few seconds, kill the celery process inside the container:
+### Step 14: Kill the worker and watch it recover
 
 ```bash
 docker exec lab22-app pkill -f "celery worker"
-```
-
-Immediately check the supervisor status:
-
-```bash
+sleep 2
 docker exec lab22-app supervisorctl status
 ```
 
-The `celery` program briefly shows `STOPPED` or `STARTING`, then returns to `RUNNING` within seconds as `supervisord` relaunches it.
+The `celery` program briefly shows `STARTING`, then returns to `RUNNING` within seconds. The unacknowledged task is requeued by RabbitMQ because `acks_late=True` is set, and the restarted worker picks it up.
 
-![supervisorctl status after pkill](./images/output-12.png)
-
-Confirm the restart in the log:
-
-```bash
-tail -20 ~/lab-22/app/logs/celery.log
-```
-
-The log shows the worker shutting down and then starting fresh. Because `acks_late=True` is set, RabbitMQ requeues the unacknowledged task and the restarted worker picks it up automatically.
-
-![celery.log after restart](./images/output-13.png)
-
-### Step 20: Control individual programs
-
-Stop the Celery worker gracefully:
-
-```bash
-docker exec lab22-app supervisorctl stop celery
-```
-
-```bash
-docker exec lab22-app supervisorctl status
-```
-
-`celery` shows `STOPPED`. The Flask API keeps running uninterrupted.
-
-![supervisorctl status — celery STOPPED, web RUNNING](./images/output-14.png)
-
-Start the worker again:
-
-```bash
-docker exec lab22-app supervisorctl start celery
-```
-
-```bash
-docker exec lab22-app supervisorctl status
-```
-
-Both programs show `RUNNING` again.
-
-![supervisorctl status after start celery](./images/output-15.png)
-
-Restart all programs at once:
-
-```bash
-docker exec lab22-app supervisorctl restart all
-```
-
-```bash
-docker exec lab22-app supervisorctl status
-```
-
-![supervisorctl status after restart all](./images/output-16.png)
-
-### Step 21: Read the supervisord event log
-
-```bash
-cat ~/lab-22/app/logs/supervisord.log
-```
-
-Every start, stop, restart, and crash event is recorded with timestamps.
-
-![supervisord.log event log](./images/output-17.png)
-
-### Step 22: Stop all stacks
+### Step 15: Stop the stack
 
 ```bash
 cd ~/lab-22/app && docker compose down
 cd ~/lab-22/broker && docker compose down -v
 ```
 
-![docker compose down output](./images/output-18.png)
-
 ---
+
+## Part B — systemd on the host
+
+The Flask API runs once with `python -m app.api` in a venv. The Celery worker is registered as a `systemd` service. `systemd` brings the worker back automatically and starts it on boot. RabbitMQ stays in the broker stack from Part A.
+
+### Step 16: Reuse the broker stack
+
+```bash
+cd ~/lab-22/broker
+docker compose up -d
+docker compose ps
+```
+
+`lab22-rabbitmq` shows `healthy`.
+
+### Step 17: Create the project layout
+
+```bash
+mkdir -p ~/lab-22 && cd ~/lab-22
+mkdir -p app
+cat > requirements.txt << 'EOF'
+flask==3.0.3
+celery==5.4.0
+kombu==5.3.7
+EOF
+```
+
+### Step 18: Write `app/celery_app.py`
+
+```bash
+cat > app/celery_app.py << 'EOF'
+from celery import Celery
+
+app = Celery(
+    "lab22-systemd",
+    broker="amqp://guest:guest@localhost:5672//",
+    backend="rpc://",
+)
+
+@app.task(name="lab22.add")
+def add(x: int, y: int) -> int:
+    return x + y
+EOF
+```
+
+### Step 19: Write `app/api.py`
+
+```bash
+cat > app/api.py << 'EOF'
+from flask import Flask, jsonify, request
+from app.celery_app import add
+
+api = Flask(__name__)
+
+@api.post("/tasks")
+def publish():
+    data = request.get_json(force=True)
+    res = add.delay(int(data["x"]), int(data["y"]))
+    return jsonify({"task_id": res.id}), 202
+
+@api.get("/result/<task_id>")
+def result(task_id: str):
+    from celery.result import AsyncResult
+    r = AsyncResult(task_id)
+    return jsonify({"state": r.state, "value": r.result})
+
+if __name__ == "__main__":
+    api.run(host="0.0.0.0", port=5000)
+EOF
+```
+
+### Step 20: Write `worker.sh`
+
+```bash
+cat > worker.sh << 'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+exec celery -A app.celery_app worker --loglevel=info --concurrency=2
+EOF
+chmod +x worker.sh
+```
+
+### Step 21: Install the worker dependencies
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Confirm the worker can boot in the foreground. Press `Ctrl+C` after you see `celery@hostname ready`.
+
+```bash
+./worker.sh
+```
+
+### Step 22: Write the systemd unit file
+
+```bash
+cat | sudo tee /etc/systemd/system/lab22-celery.service <<'EOF'
+[Unit]
+Description=Lab 22 Celery Worker
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+WorkingDirectory=/root/lab-22
+ExecStart=/root/lab-22/worker.sh
+Restart=always
+RestartSec=3
+User=root
+StandardOutput=append:/var/log/lab22-celery.out.log
+StandardError=append:/var/log/lab22-celery.err.log
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+Replace `/root/lab-22` with your actual project path (`$HOME/lab-22` for non-root users; check with `pwd`).
+
+### Step 23: Enable and start the systemd unit
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable lab22-celery.service
+sudo systemctl start lab22-celery.service
+sudo systemctl status lab22-celery.service --no-pager
+```
+
+The output ends with `active (running)`.
+
+### Step 24: Publish a task and confirm the worker handles it
+
+Start the Flask API in another terminal:
+
+```bash
+source .venv/bin/activate
+python -m app.api
+```
+
+Publish a task:
+
+```bash
+curl -s -X POST http://localhost:5000/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"x": 2, "y": 40}'
+```
+
+Wait a moment, then fetch the result:
+
+```bash
+curl -s http://localhost:5000/result/<task_id>
+```
+
+Expected output:
+
+```json
+{"state": "SUCCESS", "value": 42}
+```
+
+### Step 25: Trigger a crash and watch systemd restart
+
+Find the worker PID and kill it:
+
+```bash
+systemctl show -p MainPID lab22-celery.service
+sudo kill -9 <pid>
+sleep 4
+sudo systemctl status lab22-celery.service --no-pager | head -10
+```
+
+The output includes a new PID and `active (running)`.
+
+### Step 26: Expose the Flask API in the lab UI
+
+```bash
+hostname -I
+```
+
+Use the first IP printed as `LB_IP`. Open the **Load Balancer** modal in the lab UI (top-right) and expose one port:
+
+| Enter IP | Enter Port |
+|----------|------------|
+| `LB_IP` | `5000` (Flask API) |
+
+Click the generated `.lb.poridhi.io` URL to open the service in a new tab.
+
+### Step 27: Stop the worker
+
+```bash
+sudo systemctl stop lab22-celery.service
+cd ~/lab-22/broker && docker compose down -v
+```
 
 ## Conclusion
 
-You have consolidated the Flask API and the Celery worker into a single container where `supervisord` runs as PID 1 and manages both programs. Killing the worker mid-task proved that `supervisord` brings it back within seconds, and `acks_late=True` made sure the unacknowledged task was requeued. `supervisorctl stop celery` showed that you can suspend the worker without taking down the Flask API, and the per-process log files under `~/lab-22/app/logs/` made every restart and crash event visible without entering the container.
-
-* One image, one process supervisor, two cooperating programs.
-* Per-program logs are tailable from the host.
-* Restarting or stopping one program does not affect the other.
-
+You have run the same Celery worker under two different supervisors. `supervisord` is the right pick when the host already has Python and a project virtualenv in place — its config files are simple and the `supervisorctl` CLI is fast. `systemd` is the right pick when the host is a fresh VM with no extra packages — it ships with the OS, integrates with the boot sequence, and is the standard way to declare long-running services. Both forms give you auto-restart on crash and start-on-boot. Pick whichever matches the host you are deploying onto.
