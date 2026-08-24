@@ -8,6 +8,18 @@ RabbitMQ runs in its own Docker Compose stack. Flask and Celery run in a second 
 
 <p align="center"><img src="./images/architecture.svg" alt="Lab 21 Architecture"></p>
 
+## Concept
+
+| Term               | Description                                                                                            |
+|--------------------|--------------------------------------------------------------------------------------------------------|
+| Docker Compose     | A tool for defining and running multi-container applications using a single declarative YAML file.     |
+| Docker Network     | A virtual network that lets containers resolve each other by service name without hard-coded IPs.      |
+| Named Volume       | A persistent storage volume managed by Docker, identified by name, that survives container restarts.   |
+| Healthcheck        | A container-level probe that lets Docker report `healthy` only when the broker is actually accepting AMQP traffic. |
+| AMQP               | The wire protocol RabbitMQ uses to accept and deliver messages between publishers and consumers.       |
+
+Splitting the broker into its own stack means the broker owns its data volume and its own network, and the application stack joins that network by name. If you tear down the application stack to rebuild it, RabbitMQ and its queued messages are untouched. The healthcheck is what stops the app stack from starting Celery before the broker is ready to accept connections.
+
 ## What You Will Build
 
 Two stacks on one host. A broker stack that owns a named Docker network and a named volume. An application stack that joins the network and reads its broker URL from the network — no IPs, no hostnames pinned to one container.
