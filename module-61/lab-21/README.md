@@ -26,7 +26,7 @@ docker --version
 docker compose version
 ```
 
-![](./images/output-1.png)
+![](./images/Docker--version.png)
 
 ## Step 3: Write the broker compose
 
@@ -73,8 +73,7 @@ docker compose ps
 
 `lab21-rabbitmq` shows `healthy` once it accepts AMQP.
 
-![](./images/output-2.png)
-![](./images/output-3.png)
+![](./images/Step_4_Start the broker.png)
 
 ## Step 5: Write the app files
 
@@ -191,8 +190,8 @@ docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
 Three containers run: `lab21-rabbitmq`, `lab21-web`, `lab21-celery`.
 
-![](./images/output-4.png)
-![](./images/output-5.png)
+![](./images/Step 7 Start the app stack (2).png)
+![](./images/Step 7 Start the app stack (1).png)
 
 ## Step 8: Expose ports in the lab UI
 
@@ -204,12 +203,14 @@ hostname -I
 
 Use the first IP as `LB_IP`.
 
-![](./images/output-6.png)
+![](./images/Hostname.png)
 
 | Enter IP | Enter Port |
 |----------|------------|
 | `LB_IP` | `5000` (Flask API) |
 | `LB_IP` | `15672` (RabbitMQ UI) |
+
+![](./images/Loadbalancer.png)
 
 ## Step 9: Trigger a task
 
@@ -225,7 +226,7 @@ Response:
 {"status": "accepted", "order_id": "a1b2c3d4"}
 ```
 
-![](./images/output-7.png)
+![](./images/Step 9 Trigger a task.png)
 
 ## Step 10: Watch the worker
 
@@ -236,7 +237,7 @@ docker compose logs -f celery
 
 Press `Ctrl+C` to detach.
 
-![](./images/output-8.png)
+![](./images/Step 11 docker compose down.png)
 
 ## Step 11: Prove broker independence
 
@@ -255,7 +256,7 @@ docker compose ps
 
 `lab21-rabbitmq` stays `healthy`. The queue definition and volume are intact.
 
-![](./images/output-9.png)
+![](./images/Step 11 docker compose ps.png)
 
 ## Step 12: Restart the app stack
 
@@ -267,7 +268,7 @@ docker compose logs celery
 
 The worker reconnects to RabbitMQ without config changes.
 
-![](./images/output-10.png)
+![](./images/Step 12 Restart the app stack.png)
 
 ## Step 13: Tear down
 
@@ -278,7 +279,7 @@ cd ~/lab-21/broker && docker compose down -v
 
 `-v` drops the named volume so the next run starts clean.
 
-![](./images/output-11.png)
+![](./images/Step 13 Tear down.png)
 
 
 ## Next Steps
