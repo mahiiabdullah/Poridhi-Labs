@@ -265,13 +265,29 @@ docker exec lab22-app supervisorctl status
 
 Both `web` and `celery` show `RUNNING` as child processes of `supervisord`.
 
-### Step 13: Trigger a job
+### Step 13: Expose port 5000 in the lab UI
 
-Find the host IP and expose port 5000 in the Load Balancer modal:
+Open the **Load Balancer** modal in the lab UI (top-right). Run this once to find the IP to enter:
 
 ```bash
 hostname -I
 ```
+
+Sample output:
+
+```
+10.61.7.107 172.17.0.1 100.80.176.159 172.18.0.1
+```
+
+Use the first IP printed as `LB_IP`. Open the Load Balancer modal.
+
+| Enter IP | Enter Port |
+|----------|------------|
+| `LB_IP` | `5000` (Flask API) |
+
+Click **Expose**. Copy the generated `.lb.poridhi.io` URL — the rest of the lab uses it as `<FLASK-LB-URL>`.
+
+### Step 14: Trigger a job from the LB URL
 
 ```bash
 curl -X POST <FLASK-LB-URL>/jobs \
@@ -287,7 +303,7 @@ tail -f ~/lab-22/app/logs/celery.log
 
 Press `Ctrl+C` to stop tailing.
 
-### Step 14: Kill the worker and watch it recover
+### Step 15: Kill the worker and watch it recover
 
 ```bash
 docker exec lab22-app pkill -f "celery worker"
@@ -297,7 +313,7 @@ docker exec lab22-app supervisorctl status
 
 The `celery` program briefly shows `STARTING`, then returns to `RUNNING` within seconds. The unacknowledged task is requeued by RabbitMQ because `acks_late=True` is set, and the restarted worker picks it up.
 
-### Step 15: Stop the stack
+### Step 16: Stop the stack
 
 ```bash
 cd ~/lab-22/app && docker compose down
@@ -310,7 +326,7 @@ cd ~/lab-22/broker && docker compose down -v
 
 The Flask API runs once with `python -m app.api` in a venv. The Celery worker is registered as a `systemd` service. `systemd` brings the worker back automatically and starts it on boot. RabbitMQ stays in the broker stack from Part A.
 
-### Step 16: Reuse the broker stack
+### Step 17: Reuse the broker stack
 
 ```bash
 cd ~/lab-22/broker
@@ -320,7 +336,7 @@ docker compose ps
 
 `lab22-rabbitmq` shows `healthy`.
 
-### Step 17: Create the project layout
+### Step 18: Create the project layout
 
 ```bash
 mkdir -p ~/lab-22 && cd ~/lab-22
@@ -332,7 +348,7 @@ kombu==5.3.7
 EOF
 ```
 
-### Step 18: Write `app/celery_app.py`
+### Step 19: Write `app/celery_app.py`
 
 ```bash
 cat > app/celery_app.py << 'EOF'
@@ -350,7 +366,7 @@ def add(x: int, y: int) -> int:
 EOF
 ```
 
-### Step 19: Write `app/api.py`
+### Step 20: Write `app/api.py`
 
 ```bash
 cat > app/api.py << 'EOF'
@@ -376,7 +392,7 @@ if __name__ == "__main__":
 EOF
 ```
 
-### Step 20: Write `worker.sh`
+### Step 21: Write `worker.sh`
 
 ```bash
 cat > worker.sh << 'EOF'
@@ -388,7 +404,7 @@ EOF
 chmod +x worker.sh
 ```
 
-### Step 21: Install the worker dependencies
+### Step 22: Install the worker dependencies
 
 ```bash
 python -m venv .venv
@@ -402,7 +418,7 @@ Confirm the worker can boot in the foreground. Press `Ctrl+C` after you see `cel
 ./worker.sh
 ```
 
-### Step 22: Write the systemd unit file
+### Step 23: Write the systemd unit file
 
 ```bash
 cat | sudo tee /etc/systemd/system/lab22-celery.service <<'EOF'
@@ -428,7 +444,7 @@ EOF
 
 Replace `/root/lab-22` with your actual project path (`$HOME/lab-22` for non-root users; check with `pwd`).
 
-### Step 23: Enable and start the systemd unit
+### Step 24: Enable and start the systemd unit
 
 ```bash
 sudo systemctl daemon-reload
@@ -439,19 +455,39 @@ sudo systemctl status lab22-celery.service --no-pager
 
 The output ends with `active (running)`.
 
-### Step 24: Publish a task and confirm the worker handles it
+### Step 25: Expose port 5000 in the lab UI
 
-Start the Flask API in another terminal:
+Start the Flask API in another terminal so you can hit it from the LB URL:
 
 ```bash
 source .venv/bin/activate
 python -m app.api
 ```
 
-Publish a task:
+Open the **Load Balancer** modal in the lab UI (top-right). Run this once to find the IP to enter:
 
 ```bash
-curl -s -X POST http://localhost:5000/tasks \
+hostname -I
+```
+
+Sample output:
+
+```
+10.61.7.107 172.17.0.1 100.80.176.159 172.18.0.1
+```
+
+Use the first IP printed as `LB_IP`. Open the Load Balancer modal.
+
+| Enter IP | Enter Port |
+|----------|------------|
+| `LB_IP` | `5000` (Flask API) |
+
+Click **Expose**. Copy the generated `.lb.poridhi.io` URL — the rest of the lab uses it as `<FLASK-LB-URL>`.
+
+### Step 26: Publish a task and confirm the worker handles it
+
+```bash
+curl -s -X POST <FLASK-LB-URL>/tasks \
   -H "Content-Type: application/json" \
   -d '{"x": 2, "y": 40}'
 ```
@@ -459,7 +495,7 @@ curl -s -X POST http://localhost:5000/tasks \
 Wait a moment, then fetch the result:
 
 ```bash
-curl -s http://localhost:5000/result/<task_id>
+curl -s <FLASK-LB-URL>/result/<task_id>
 ```
 
 Expected output:
@@ -468,7 +504,7 @@ Expected output:
 {"state": "SUCCESS", "value": 42}
 ```
 
-### Step 25: Trigger a crash and watch systemd restart
+### Step 27: Trigger a crash and watch systemd restart
 
 Find the worker PID and kill it:
 
@@ -481,21 +517,7 @@ sudo systemctl status lab22-celery.service --no-pager | head -10
 
 The output includes a new PID and `active (running)`.
 
-### Step 26: Expose the Flask API in the lab UI
-
-```bash
-hostname -I
-```
-
-Use the first IP printed as `LB_IP`. Open the **Load Balancer** modal in the lab UI (top-right) and expose one port:
-
-| Enter IP | Enter Port |
-|----------|------------|
-| `LB_IP` | `5000` (Flask API) |
-
-Click the generated `.lb.poridhi.io` URL to open the service in a new tab.
-
-### Step 27: Stop the worker
+### Step 28: Stop the worker
 
 ```bash
 sudo systemctl stop lab22-celery.service
