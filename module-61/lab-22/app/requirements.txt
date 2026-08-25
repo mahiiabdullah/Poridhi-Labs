@@ -1,5 +1,0 @@
-flask==3.0.3
-celery==5.4.0
-redis==5.0.7
-flower==2.0.1
-gunicorn==22.0.0
