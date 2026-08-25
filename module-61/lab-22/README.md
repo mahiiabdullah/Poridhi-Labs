@@ -318,12 +318,14 @@ Press `Ctrl+C` to stop tailing.
 ## Step 15: Kill the worker and watch it recover
 
 ```bash
-docker exec lab22-app pkill -f "celery worker"
+docker exec lab22-app supervisorctl signal KILL celery
 sleep 2
 docker exec lab22-app supervisorctl status
 ```
 
-The `celery` program briefly shows `STARTING`, then returns to `RUNNING` within seconds. The unacknowledged task is requeued by RabbitMQ because `acks_late=True` is set, and the restarted worker picks it up.
+`supervisord` reports `celery: signalled`, briefly shows `STARTING`, then returns to `RUNNING` with a fresh PID. The unacknowledged task is requeued by RabbitMQ because `acks_late=True` is set, and the restarted worker picks it up.
+
+`supervisorctl signal KILL celery` forwards `SIGKILL` to the worker through the supervisor's own RPC channel, so no extra tools (`pkill`, `pgrep`, `kill`) are needed inside the container.
 
 ## Step 16: Stop the stack
 
@@ -366,6 +368,13 @@ app = Celery(
     backend="rpc://",
 )
 
+app.conf.update(
+    task_acks_late=True,
+    task_reject_on_worker_lost=True,
+    worker_prefetch_multiplier=1,
+    broker_connection_retry_on_startup=True,
+)
+
 @app.task(name="lab22.add")
 def add(x: int, y: int) -> int:
     return x + y
@@ -405,12 +414,17 @@ cat > worker.sh << 'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")"
+source .venv/bin/activate
 exec celery -A app.celery_app worker --loglevel=info --concurrency=2
 EOF
 chmod +x worker.sh
 ```
 
+`source .venv/bin/activate` is required because systemd starts the unit with a minimal `PATH` that does **not** include `~/lab-22/.venv/bin/`. Activating the venv inside the script puts `celery` on PATH regardless of what environment systemd passes. The venv must live next to `worker.sh` (i.e. inside `~/lab-22/`), not in `$HOME`.
+
 ## Step 22: Install the worker dependencies
+
+The venv lives inside the project directory:
 
 ```bash
 python -m venv .venv
@@ -427,7 +441,7 @@ Confirm the worker can boot in the foreground. Press `Ctrl+C` after you see `cel
 ## Step 23: Write the systemd unit file
 
 ```bash
-cat | sudo tee /etc/systemd/system/lab22-celery.service <<'EOF'
+sudo tee /etc/systemd/system/lab22-celery.service >/dev/null <<'EOF'
 [Unit]
 Description=Lab 22 Celery Worker
 After=network.target docker.service
