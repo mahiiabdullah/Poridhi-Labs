@@ -6,7 +6,7 @@ This lab upgrades the in-process threading model from previous lab. A Flask API 
 
 ## Architecture
 
-<p align="center"><img src="https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-19/images/architecture.svg" alt="Lab 19 Architecture"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/architecture.svg" alt="Lab 19 Architecture"></p>
 
 ## What You Will Build
 
@@ -26,7 +26,7 @@ docker --version
 docker compose version
 ```
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-19/images/End%20of%20step%202.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/End%20of%20step%202.png)
 
 ## Step 3: Create the requirements file
 
@@ -220,7 +220,7 @@ Expected output:
 /home/poridhian/lab-19/app/tasks.py
 ```
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-19/images/Find%20-type%20f.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/Find%20-type%20f.png)
 
 ## Step 10: Build and start the stack
 
@@ -231,8 +231,8 @@ docker compose up -d --build
 
 The first run downloads three images and can take a minute. Subsequent runs are instant.
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-19/images/Step%2010%201.png)
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-19/images/Step%2010%202.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/Step%2010%201.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/Step%2010%202.png)
 
 ## Step 11: Wait for the broker to become healthy
 
@@ -242,7 +242,7 @@ docker compose ps
 
 `lab19-rabbitmq` shows `healthy` once the broker accepts AMQP connections.
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-19/images/Step%2014%20docker%20compose%20ps.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/Step%2014%20docker%20compose%20ps.png)
 
 ## Step 12: Open the Load Balancer modal in the lab UI
 
@@ -260,7 +260,7 @@ Sample output:
 
 Use the first IP printed as `LB_IP`. Open the Load Balancer modal.
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-19/images/Hostname.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/Hostname.png)
 
 Expose two ports, one at a time:
 
@@ -271,7 +271,7 @@ Expose two ports, one at a time:
 
 The modal lists each route after you click **Expose**. Click the generated `.lb.poridhi.io` URL to open the service in a new tab.
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-19/images/Expose%20port.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/Expose%20port.png)
 
 ## Step 13: Log in to the RabbitMQ Management UI
 
@@ -282,7 +282,7 @@ Open the `.lb.poridhi.io` URL for port 15672. Login with:
 
 The dashboard shows three sections at the top: Overview, Connections, Channels. The queue view is empty for now.
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-19/images/Step%2013.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/Step%2013.png)
 
 ## Step 14: Trigger a task from curl
 
@@ -304,7 +304,7 @@ Expected response within a few milliseconds:
 }
 ```
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-19/images/Step%2014.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/Step%2014.png)
 
 ## Step 15: Inspect the queue in the Management UI
 
@@ -333,7 +333,7 @@ docker compose ps
 
 `lab19-rabbitmq` returns to `healthy`. Refresh the Management UI. The `celery` queue is still listed and still shows the **D** badge.
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-19/images/docker%20compose%20restart%20rabbitmq.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/docker%20compose%20restart%20rabbitmq.png)
 
 ## Step 17: Verify late acks by killing the worker mid-task
 
@@ -347,7 +347,7 @@ curl -X POST <FLASK-LB-URL>/tasks \
 
 Note the `task_id` from the response.
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-19/images/Trigger%20a%20longer%20task%20so%20you%20have%20time%20to%20kill%20the%20worker.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/Trigger%20a%20longer%20task%20so%20you%20have%20time%20to%20kill%20the%20worker.png)
 
 Within two seconds, force-kill the Celery worker:
 
@@ -371,7 +371,7 @@ docker compose logs -f celery
 
 You see a new `[Task a1b2c3d4] started` line followed by `processing (1/30)`. The same `task_id`, restarted from scratch. With early acks, this task would have been silently lost.
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-19/images/docker%20compose%20up%20d%20celery.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/docker%20compose%20up%20d%20celery.png)
 
 ## Step 18: Stop the stack
 
@@ -385,11 +385,11 @@ Add `-v` to also remove the RabbitMQ volume for a clean slate:
 docker compose down -v
 ```
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-19/images/docker%20compose%20logs%20f%20celery.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/docker%20compose%20logs%20f%20celery.png)
 
 The Load Balancer URL now returns a 502 because the Flask container is gone:
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-19/images/Step%2018%20After%20docker%20compose%20down.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/Step%2018%20After%20docker%20compose%20down.png)
 
 ## Next Steps
 
