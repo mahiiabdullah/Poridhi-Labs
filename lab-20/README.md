@@ -5,7 +5,7 @@
 This lab adds automatic retry behavior to Celery tasks. When a task raises an exception, Celery re-runs it automatically after a delay that grows exponentially. After a configured number of attempts the task fails permanently.
 
 ## Architecture
-<p align="center"><img src="https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-20/images/architecture.svg" alt="Lab 20 Architecture"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/architecture.svg" alt="Lab 20 Architecture"></p>
 
 ## What You Will Build
 
@@ -25,7 +25,7 @@ docker --version
 docker compose version
 ```
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-20/images/Confirm%20Docker%20and%20Docker%20Compose%20are%20installed.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/Confirm%20Docker%20and%20Docker%20Compose%20are%20installed.png)
 
 ## Step 3: Create the requirements file
 
@@ -241,7 +241,7 @@ Expected output:
 /home/poridhian/lab-20/app/tasks.py
 ```
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-20/images/Verify%20the%20file%20layout.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/Verify%20the%20file%20layout.png)
 
 ## Step 10: Build and start the stack
 
@@ -250,7 +250,7 @@ cd ~/lab-20
 docker compose up -d --build
 ```
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-20/images/Step%2010%20docker%20compose%20up.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/Step%2010%20docker%20compose%20up.png)
 
 Wait for RabbitMQ to pass its health check:
 
@@ -260,7 +260,7 @@ docker compose ps
 
 `lab20-rabbitmq` shows `healthy`.
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-20/images/Step%2010%20docker%20compose%20ps.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/Step%2010%20docker%20compose%20ps.png)
 
 ## Step 11: Open the Load Balancer modal in the lab UI
 
@@ -278,7 +278,7 @@ Sample output:
 
 Use the first IP printed as `LB_IP`. Open the Load Balancer modal.
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-20/images/hostname.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/hostname.png)
 
 
 Expose one port:
@@ -289,7 +289,7 @@ Expose one port:
 
 Click **Expose**. Copy the generated `.lb.poridhi.io` URL — the rest of the lab uses it as `<FLASK-LB-URL>`.
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-20/images/LoadBalancer%20setup.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/LoadBalancer%20setup.png)
 
 ## Step 12: Trigger a failing task
 
@@ -312,7 +312,7 @@ Expected response within milliseconds:
 }
 ```
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-20/images/Step%2012%20Trigger%20a%20failing%20task.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/Step%2012%20Trigger%20a%20failing%20task.png)
 
 ## Step 13: Watch the worker retry the task
 
@@ -327,9 +327,9 @@ docker compose logs -f celery
 
 The logs show six attempts in total. Each line reveals the backoff in action.
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-20/images/Step%2013%20Watch%20the%20worker%20retry%20the%20task_1.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/Step%2013%20Watch%20the%20worker%20retry%20the%20task_1.png)
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-20/images/Step%2013%20Watch%20the%20worker%20retry%20the%20task_2.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/Step%2013%20Watch%20the%20worker%20retry%20the%20task_2.png)
 
 The center of each delay doubles — 1s, 2s, 4s, 8s, 16s — but `retry_jitter=True` adds a random offset, so your live numbers may be slightly different (for example `Retry in 0s`, `2s`, `2s`, `3s`, `14s`). After six attempts the task fails permanently and Celery prints `raised unexpected: TransientError(...)` with a traceback.
 
@@ -344,7 +344,7 @@ curl -X POST <FLASK-LB-URL>/tasks \
   -d '{"fail_until": 3}'
 ```
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-20/images/Step%2014%20Trigger%20a%20task%20that%20recovers%20Curl.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/Step%2014%20Trigger%20a%20task%20that%20recovers%20Curl.png)
 
 Follow the logs again:
 
@@ -355,9 +355,9 @@ docker compose logs -f celery
 The task fails on attempts one and two, retries, and succeeds on attempt three. The final log line reads `attempt 3 succeeded`.
 
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-20/images/Step%2014%20Trigger%20a%20task%20that%20recovers%20docker%20compose_1.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/Step%2014%20Trigger%20a%20task%20that%20recovers%20docker%20compose_1.png)
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-20/images/Step%2014%20Trigger%20a%20task%20that%20recovers%20docker%20compose_2.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/Step%2014%20Trigger%20a%20task%20that%20recovers%20docker%20compose_2.png)
 
 ## Step 15: Tune the backoff window
 
@@ -403,7 +403,7 @@ def flaky_task(self, task_id: str, fail_until: int = 99) -> dict:
 EOF
 ```
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-20/images/Rewrite%20app_tasks_py.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/Rewrite%20app_tasks_py.png)
 
 `retry_backoff_max=4` caps each retry at four seconds. `retry_jitter=False` removes randomness so the doubling pattern is exact.
 
@@ -413,7 +413,7 @@ Restart the worker so the new decorator takes effect:
 docker compose restart celery
 ```
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-20/images/Step%2015%20docker%20compose%20restart%20celery.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/Step%2015%20docker%20compose%20restart%20celery.png)
 
 Trigger the failing task again:
 
@@ -423,7 +423,7 @@ curl -X POST <FLASK-LB-URL>/tasks \
   -d '{"fail_until": 99}'
 ```
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-20/images/Step%2015%20Trigger%20the%20failing%20task%20again.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/Step%2015%20Trigger%20the%20failing%20task%20again.png)
 
 Watch the worker:
 
@@ -441,7 +441,7 @@ The retries now happen at exactly 1s, 2s, 4s, 4s, 4s. The Celery log lines read 
 docker compose down
 ```
 
-![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/lab-20/images/docker%20compose%20down.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/docker%20compose%20down.png)
 
 Add `-v` to remove the RabbitMQ volume for a clean slate:
 
