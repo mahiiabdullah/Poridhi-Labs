@@ -1,4 +1,4 @@
-# Lab 21: Deploying RabbitMQ as a Dedicated Broker
+﻿# Lab 21: Deploying RabbitMQ as a Dedicated Broker
 
 **Module 61 — Deployment and Monitoring**
 
@@ -6,7 +6,7 @@ RabbitMQ runs in its own Docker Compose stack. Flask and Celery run in a second 
 
 ## Architecture
 
-<p align="center"><img src="./images/architecture.svg" alt="Lab 21 Architecture"></p>
+<p align="center"><img src="https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/module-61/lab-21/images/architecture.svg" alt="Lab 21 Architecture"></p>
 
 ## Concept
 
@@ -38,7 +38,7 @@ docker --version
 docker compose version
 ```
 
-![](./images/Docker--version.png)
+![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/module-61/lab-21/images/Docker--version.png)
 
 ## Step 3: Write the broker compose
 
@@ -85,7 +85,7 @@ docker compose ps
 
 `lab21-rabbitmq` shows `healthy` once it accepts AMQP.
 
-![](./images/Step_4_Start the broker.png)
+![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/module-61/lab-21/images/Step_4_Start%20the%20broker.png)
 
 ## Step 5: Write the app files
 
@@ -202,8 +202,8 @@ docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
 Three containers run: `lab21-rabbitmq`, `lab21-web`, `lab21-celery`.
 
-![](./images/Step 7 Start the app stack (2).png)
-![](./images/Step 7 Start the app stack (1).png)
+![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/module-61/lab-21/images/Step%207%20Start%20the%20app%20stack%20(2).png)
+![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/module-61/lab-21/images/Step%207%20Start%20the%20app%20stack%20(1).png)
 
 ## Step 8: Expose ports in the lab UI
 
@@ -215,14 +215,14 @@ hostname -I
 
 Use the first IP as `LB_IP`.
 
-![](./images/Hostname.png)
+![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/module-61/lab-21/images/Hostname.png)
 
 | Enter IP | Enter Port |
 |----------|------------|
 | `LB_IP` | `5000` (Flask API) |
 | `LB_IP` | `15672` (RabbitMQ UI) |
 
-![](./images/Loadbalancer.png)
+![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/module-61/lab-21/images/Loadbalancer.png)
 
 ## Step 9: Trigger a task
 
@@ -238,7 +238,7 @@ Response:
 {"status": "accepted", "order_id": "a1b2c3d4"}
 ```
 
-![](./images/Step 9 Trigger a task.png)
+![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/module-61/lab-21/images/Step%209%20Trigger%20a%20task.png)
 
 ## Step 10: Watch the worker
 
@@ -249,7 +249,7 @@ docker compose logs -f celery
 
 Press `Ctrl+C` to detach.
 
-![](./images/Step 11 docker compose down.png)
+![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/module-61/lab-21/images/Step%2011%20docker%20compose%20down.png)
 
 ## Step 11: Prove broker independence
 
@@ -268,7 +268,7 @@ docker compose ps
 
 `lab21-rabbitmq` stays `healthy`. The queue definition and volume are intact.
 
-![](./images/Step 11 docker compose ps.png)
+![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/module-61/lab-21/images/Step%2011%20docker%20compose%20ps.png)
 
 ## Step 12: Restart the app stack
 
@@ -280,7 +280,7 @@ docker compose logs celery
 
 The worker reconnects to RabbitMQ without config changes.
 
-![](./images/Step 12 Restart the app stack.png)
+![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/module-61/lab-21/images/Step%2012%20Restart%20the%20app%20stack.png)
 
 ## Step 13: Tear down
 
@@ -291,7 +291,7 @@ cd ~/lab-21/broker && docker compose down -v
 
 `-v` drops the named volume so the next run starts clean.
 
-![](./images/Step 13 Tear down.png)
+![](https://github.com/poridhioss/Module_60_Message-Brokers-for-Celery/blob/main/module-61/lab-21/images/Step%2013%20Tear%20down.png)
 
 
 ## Next Steps
