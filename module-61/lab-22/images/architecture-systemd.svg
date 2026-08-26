@@ -1,0 +1,99 @@
+<svg viewBox="0 0 1200 780" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1a1a1a"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="780" fill="#ffffff"/>
+  <rect x="10" y="10" width="1180" height="760" rx="10" fill="none" stroke="#1a1a1a" stroke-width="2"/>
+
+  <!-- ===================== TOP: BOOT CHAIN (centered) ===================== -->
+  <rect x="300" y="60" width="160" height="48" rx="8" fill="#fdebd3" stroke="#e08e2b" stroke-width="1.6"/>
+  <text x="380" y="89" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">Host Boot</text>
+
+  <line x1="460" y1="84" x2="506" y2="84" stroke="#1a1a1a" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow)">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/>
+  </line>
+
+  <rect x="510" y="60" width="180" height="48" rx="8" fill="#fdebd3" stroke="#e08e2b" stroke-width="1.6"/>
+  <text x="600" y="82" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">systemd</text>
+  <text x="600" y="100" text-anchor="middle" font-size="10.5" fill="#8a5a1a">(PID 1)</text>
+
+  <line x1="600" y1="108" x2="600" y2="226" stroke="#1a1a1a" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow)">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/>
+  </line>
+
+  <!-- ===================== DIAMOND (canvas center) ===================== -->
+  <polygon points="600,230 710,300 600,370 490,300" fill="#dce8fa" stroke="#5b8fd4" stroke-width="1.6"/>
+  <text x="600" y="296" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">systemd</text>
+  <text x="600" y="313" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">Service Manager</text>
+
+  <!-- ===================== LEFT FLANK: BROKER STACK ===================== -->
+  <rect x="230" y="225" width="220" height="150" rx="10" fill="#f2e9fb" stroke="#9b6fd1" stroke-width="1.6"/>
+  <text x="340" y="292" text-anchor="middle" font-size="15" font-weight="700" fill="#1a1a1a">Broker Stack</text>
+  <text x="340" y="314" text-anchor="middle" font-size="11" fill="#666666">amqp://localhost:5672</text>
+
+  <line x1="450" y1="300" x2="486" y2="300" stroke="#1a1a1a" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow)">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/>
+  </line>
+
+  <!-- ===================== RIGHT FLANK: SERVICE CONFIGURATION ===================== -->
+  <rect x="750" y="225" width="220" height="150" rx="10" fill="#e3f5ea" stroke="#2e9e5b" stroke-width="1.6"/>
+  <text x="860" y="292" text-anchor="middle" font-size="15" font-weight="700" fill="#1a1a1a">Service Config</text>
+  <text x="860" y="314" text-anchor="middle" font-size="11" fill="#666666">lab22-celery.service</text>
+
+  <line x1="714" y1="300" x2="746" y2="300" stroke="#1a1a1a" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow)">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/>
+  </line>
+
+  <!-- ===================== LEFT COLUMN: WORKER PROCESS ===================== -->
+  <rect x="230" y="460" width="220" height="220" rx="10" fill="#fbe4e2" stroke="#d9534f" stroke-width="1.6"/>
+  <text x="340" y="540" text-anchor="middle" font-size="15" font-weight="700" fill="#1a1a1a">Flask API + Worker</text>
+  <text x="340" y="562" text-anchor="middle" font-size="11" fill="#666666">venv &#183; host process</text>
+
+  <line x1="340" y1="375" x2="340" y2="456" stroke="#1a1a1a" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow)">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/>
+  </line>
+
+  <!-- ===================== RIGHT COLUMN: PROCESS MANAGEMENT ===================== -->
+  <rect x="750" y="460" width="220" height="220" rx="10" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.8"/>
+  <text x="762" y="480" font-size="12.5" font-weight="700" fill="#1a1a1a">Process Mgmt</text>
+
+  <rect x="762" y="496" width="196" height="50" rx="8" fill="#cdeef0" stroke="#1f9aa3" stroke-width="1.5"/>
+  <text x="860" y="526" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1a1a1a">systemctl</text>
+
+  <line x1="860" y1="546" x2="860" y2="554" stroke="#1a1a1a" stroke-width="1.6" stroke-dasharray="5,4" marker-end="url(#arrow)">
+    <animate attributeName="stroke-dashoffset" values="9;0" dur="0.6s" repeatCount="indefinite"/>
+  </line>
+
+  <rect x="762" y="556" width="196" height="50" rx="8" fill="#e6def7" stroke="#8a63c9" stroke-width="1.5"/>
+  <text x="860" y="586" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1a1a1a">Restart=always</text>
+
+  <rect x="762" y="616" width="196" height="46" rx="8" fill="#e9e6f5" stroke="#7d6fa3" stroke-width="1.5"/>
+  <text x="860" y="644" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1a1a1a">Logging</text>
+
+  <line x1="860" y1="375" x2="860" y2="492" stroke="#1a1a1a" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow)">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/>
+  </line>
+
+  <!-- ===================== CROSS ARROWS: PROCESS MGMT <-> WORKER ===================== -->
+  <line x1="758" y1="521" x2="454" y2="521" stroke="#1a1a1a" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow)">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/>
+  </line>
+  <text x="606" y="509" text-anchor="middle" font-size="11.5" fill="#444444">Starts / Stops</text>
+
+  <line x1="758" y1="581" x2="454" y2="581" stroke="#1a1a1a" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow)">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/>
+  </line>
+  <text x="606" y="569" text-anchor="middle" font-size="11.5" fill="#444444">Restarts</text>
+
+  <line x1="454" y1="639" x2="758" y2="639" stroke="#1a1a1a" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow)">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/>
+  </line>
+  <text x="606" y="627" text-anchor="middle" font-size="11.5" fill="#444444">Writes</text>
+
+
+
+</svg>
