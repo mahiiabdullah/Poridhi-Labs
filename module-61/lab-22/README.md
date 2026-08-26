@@ -546,10 +546,21 @@ Response:
 {"task_id": "8f3a1b9c-..."}
 ```
 
-Fetch the result. If it returns `PENDING`, wait a second and retry — the worker is still computing:
+Fetch the result. **`<task_id>` is a placeholder — replace it with the real UUID** from the previous response (or bash will try to parse `<` `>` as redirection and fail with `syntax error near unexpected token 'newline'`). If the result returns `PENDING`, wait a second and retry — the worker is still computing:
 
 ```bash
 curl -s <FLASK-LB-URL>/result/<task_id>
+```
+
+The robust way is to capture the id once and reuse it:
+
+```bash
+TID=$(curl -s -X POST <FLASK-LB-URL>/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"x": 2, "y": 40}' \
+  | python3 -c 'import sys,json; print(json.load(sys.stdin)["task_id"])')
+
+curl -s <FLASK-LB-URL>/result/$TID
 ```
 
 Expected:
