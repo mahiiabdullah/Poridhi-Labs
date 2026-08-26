@@ -44,6 +44,8 @@ docker --version
 docker compose version
 ```
 
+<p align="center"><img src="./images/docker --version.png" alt="Docker and Compose versions"></p>
+
 ## Step 3: Start the broker stack
 
 ```bash
@@ -84,6 +86,8 @@ docker compose ps
 ```
 
 `lab22-rabbitmq` shows `healthy` once it accepts AMQP.
+
+<p align="center"><img src="./images/Step 3 docker compose up.png" alt="Broker stack running"></p>
 
 ## Step 4: Write the application requirements
 
@@ -275,6 +279,8 @@ docker compose up -d
 
 `--no-cache` forces a clean image build so the new `requirements.txt` from Step 4 always lands in the image layer. A plain `--build` is not enough on some hosts — BuildKit can reuse the old `pip install` layer even after `requirements.txt` changes, which leaves the image without `setuptools` and `supervisord` exits with `ModuleNotFoundError`.
 
+<p align="center"><img src="./images/Step 11 Build and start the app.png" alt="App stack built and started"></p>
+
 ## Step 12: Confirm both programs are running
 
 ```bash
@@ -282,6 +288,8 @@ docker exec lab22-app supervisorctl status
 ```
 
 Both `web` and `celery` show `RUNNING` as child processes of `supervisord`.
+
+<p align="center"><img src="./images/Step 12 Confirm both programs are running.png" alt="supervisorctl status showing web + celery RUNNING"></p>
 
 ## Step 13: Expose port 5000 in the lab UI
 
@@ -305,6 +313,9 @@ Use the first IP printed as `LB_IP`.
 
 Click **Expose**. Copy the generated `.lb.poridhi.io` URL — the rest of the lab uses it as `<FLASK-LB-URL>`.
 
+<p align="center"><img src="./images/hostname -I.png" alt="hostname -I output"></p>
+<p align="center"><img src="./images/LB_IP. Loadbalancer.png" alt="Load Balancer modal with LB_IP entry"></p>
+
 ## Step 14: Trigger a job from the LB URL
 
 ```bash
@@ -321,6 +332,9 @@ tail -f ~/lab-22/app/logs/celery.log
 
 Press `Ctrl+C` to stop tailing.
 
+<p align="center"><img src="./images/Step 14 Trigger a job from the LB URL.png" alt="Triggering a job via the LB URL"></p>
+<p align="center"><img src="./images/Step 14 Tail the worker log.png" alt="Worker log tail showing job ticks"></p>
+
 ## Step 15: Kill the worker and watch it recover
 
 ```bash
@@ -333,12 +347,16 @@ docker exec lab22-app supervisorctl status
 
 `supervisorctl signal KILL celery` forwards `SIGKILL` to the worker through the supervisor's own RPC channel, so no extra tools (`pkill`, `pgrep`, `kill`) are needed inside the container.
 
+<p align="center"><img src="./images/Step 15 Kill the worker and watch it recover.png" alt="Worker back to RUNNING with a new PID"></p>
+
 ## Step 16: Stop the stack
 
 ```bash
 cd ~/lab-22/app && docker compose down
 cd ~/lab-22/broker && docker compose down -v
 ```
+
+<p align="center"><img src="./images/Step 16 Stop the stack.png" alt="App and broker stacks stopped"></p>
 
 ### systemd path (Steps 17–30)
 
@@ -355,6 +373,8 @@ docker compose ps
 ```
 
 `lab22-rabbitmq` shows `healthy`.
+
+<p align="center"><img src="./images/Step 17 Reuse the broker stack for systemd.png" alt="Broker stack reused for the systemd path"></p>
 
 ## Step 18: Create the systemd-only project directory
 
@@ -469,6 +489,8 @@ Confirm the worker can boot in the foreground. Press `Ctrl+C` after you see `cel
 ./worker.sh
 ```
 
+<p align="center"><img src="./images/Step 24 Install the worker dependencies.png" alt="Worker booting in the foreground and reporting ready"></p>
+
 ## Step 25: Write the systemd unit file
 
 ```bash
@@ -520,6 +542,8 @@ python -m app.api
 ```
 
 (For the supervisord path this is unnecessary — `supervisord.conf` already keeps Flask running under the `[program:flask]` entry.)
+
+<p align="center"><img src="./images/Step 27 Expose port 5000 in the lab UI.png" alt="Expose port 5000 in the lab UI for the systemd path"></p>
 
 ## Step 28: Publish a task and confirm the worker handles it
 
