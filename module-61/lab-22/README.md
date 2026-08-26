@@ -522,11 +522,59 @@ python -m app.api
 (For the supervisord path this is unnecessary — `supervisord.conf` already keeps Flask running under the `[program:flask]` entry.)
 
 ## Step 28: Publish a task and confirm the worker handles it
+
+Open a **second terminal** (the Flask API must keep running in Terminal A from Step 27) and run:
+
+```bash
+hostname -I
+# first IP printed is LB_IP — enter it as <LB_IP> in Step 27's table
+```
+
+If you haven't already, follow Step 27 to expose `LB_IP:5000` in the lab UI and capture `<FLASK-LB-URL>`.
+
+Publish a task and capture the `task_id`:
+
+```bash
+curl -s -X POST <FLASK-LB-URL>/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"x": 2, "y": 40}'
+```
+
+Response:
+
+```json
+{"task_id": "8f3a1b9c-..."}
+```
+
+Fetch the result. If it returns `PENDING`, wait a second and retry — the worker is still computing:
+
+```bash
+curl -s <FLASK-LB-URL>/result/<task_id>
+```
+
+Expected:
+
+```json
+{"state": "SUCCESS", "value": 42}
+```
+
+You can also confirm the worker actually executed the task by tailing its log:
+
+```bash
+tail -n 20 /var/log/lab22-celery.out.log
 ```
 
 ## Step 29: Trigger a crash and watch systemd restart
 
-Find the worker PID and kill it:
+Find the worker PID and kill it. In the **terminal running Flask (Terminal A)**, publish one more task first so the worker log has fresh activity to compare against after the restart:
+
+```bash
+curl -s -X POST <FLASK-LB-URL>/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"x": 7, "y": 35}'
+```
+
+Then in **Terminal B**:
 
 ```bash
 systemctl show -p MainPID lab22-celery.service
@@ -535,12 +583,48 @@ sleep 4
 sudo systemctl status lab22-celery.service --no-pager | head -10
 ```
 
-The output includes a new PID and `active (running)`.
+The `Main PID` line must show a **new** PID and the status must end with `active (running)`. If the status shows `failed`, double-check the unit has `Restart=always` (Step 25) and run `sudo systemctl daemon-reload` before retrying.
+
+Inspect the journal to see exactly what systemd recorded for the crash + restart:
+
+```bash
+sudo journalctl -u lab22-celery.service -n 40 --no-pager
+```
+
+You should see a `Celery worker` startup line from the new PID, no `exited`/`failed` state.
+
+The worker log also keeps an append-only record (configured in the unit's `StandardOutput=append:...` directive):
+
+```bash
+tail -n 30 /var/log/lab22-celery.out.log
+```
 
 ## Step 30: Stop the worker
 
+Stop the systemd unit, the broker stack, and the Flask terminal:
+
 ```bash
+# Terminal B
 sudo systemctl stop lab22-celery.service
-cd ~/lab-22/broker && docker compose down -v
+sudo systemctl status lab22-celery.service --no-pager
+# expect: inactive (dead)
+
+cd ~/lab-22/broker
+docker compose down -v
+```
+
+Then in **Terminal A** (the one running `python -m app.api`), press **Ctrl+C** to stop Flask. Confirm no `python` process is left behind:
+
+```bash
+pgrep -fa "python -m app.api"
+# expect: no output
+```
+
+If you want to fully undo Step 26's `enable`, run:
+
+```bash
+sudo systemctl disable lab22-celery.service
+sudo rm /etc/systemd/system/lab22-celery.service
+sudo systemctl daemon-reload
 ```
 
