@@ -340,7 +340,7 @@ cd ~/lab-22/app && docker compose down
 cd ~/lab-22/broker && docker compose down -v
 ```
 
-### systemd path (Steps 17–28)
+### systemd path (Steps 17–30)
 
 <p align="center"><img src="./images/architecture-systemd.svg" alt="Lab 22 systemd architecture"></p>
 
@@ -356,11 +356,20 @@ docker compose ps
 
 `lab22-rabbitmq` shows `healthy`.
 
-## Step 18: Create the project layout
+## Step 18: Create the systemd-only project directory
+
+Steps 1–16 already populated `~/lab-22/` with the supervisord stack (`docker-compose.yml`, `app/Dockerfile`, `app/src/...`). To avoid clobbering any of that, the systemd path lives in a sibling directory:
 
 ```bash
-mkdir -p ~/lab-22 && cd ~/lab-22
-mkdir -p app
+mkdir -p ~/lab-22/systemd/app
+cd ~/lab-22/systemd
+```
+
+Every command below is relative to `~/lab-22/systemd/`.
+
+## Step 19: Write `requirements.txt`
+
+```bash
 cat > requirements.txt << 'EOF'
 flask==3.0.3
 celery==5.4.0
@@ -368,7 +377,15 @@ kombu==5.3.7
 EOF
 ```
 
-## Step 19: Write `app/celery_app.py`
+## Step 20: Write `app/__init__.py`
+
+```bash
+touch app/__init__.py
+```
+
+This marks `app/` as a Python package so `from app.celery_app import add` works.
+
+## Step 21: Write `app/celery_app.py`
 
 ```bash
 cat > app/celery_app.py << 'EOF'
@@ -393,7 +410,9 @@ def add(x: int, y: int) -> int:
 EOF
 ```
 
-## Step 20: Write `app/api.py`
+The broker points at `localhost` because `docker-compose.yml` (Step 10) publishes `5672:5672` on the host, and this worker runs on the host under systemd.
+
+## Step 22: Write `app/api.py`
 
 ```bash
 cat > app/api.py << 'EOF'
@@ -419,7 +438,7 @@ if __name__ == "__main__":
 EOF
 ```
 
-## Step 21: Write `worker.sh`
+## Step 23: Write `worker.sh`
 
 ```bash
 cat > worker.sh << 'EOF'
@@ -432,9 +451,9 @@ EOF
 chmod +x worker.sh
 ```
 
-`source .venv/bin/activate` is required because systemd starts the unit with a minimal `PATH` that does **not** include `~/lab-22/.venv/bin/`. Activating the venv inside the script puts `celery` on PATH regardless of what environment systemd passes. The venv must live next to `worker.sh` (i.e. inside `~/lab-22/`), not in `$HOME`.
+`source .venv/bin/activate` is required because systemd starts the unit with a minimal `PATH` that does **not** include `~/lab-22/systemd/.venv/bin/`. Activating the venv inside the script puts `celery` on PATH regardless of what environment systemd passes. The venv must live next to `worker.sh` (i.e. inside `~/lab-22/systemd/`), not in `$HOME`.
 
-## Step 22: Install the worker dependencies
+## Step 24: Install the worker dependencies
 
 The venv lives inside the project directory:
 
@@ -450,7 +469,7 @@ Confirm the worker can boot in the foreground. Press `Ctrl+C` after you see `cel
 ./worker.sh
 ```
 
-## Step 23: Write the systemd unit file
+## Step 25: Write the systemd unit file
 
 ```bash
 sudo tee /etc/systemd/system/lab22-celery.service >/dev/null <<'EOF'
@@ -461,8 +480,8 @@ Requires=docker.service
 
 [Service]
 Type=simple
-WorkingDirectory=/home/poridhian/lab-22
-ExecStart=/home/poridhian/lab-22/worker.sh
+WorkingDirectory=/home/poridhian/lab-22/systemd
+ExecStart=/home/poridhian/lab-22/systemd/worker.sh
 Restart=always
 RestartSec=3
 User=root
@@ -474,9 +493,10 @@ WantedBy=multi-user.target
 EOF
 ```
 
-The Poridhi lab runs as user `poridhian` (home `/home/poridhian`), so the unit uses `/home/poridhian/lab-22`. On a different host, replace both paths with `$HOME/lab-22` — check with `pwd`.
+The Poridhi lab runs as user `poridhian` (home `/home/poridhian`), so the unit uses `/home/poridhian/lab-22/systemd`. On a different host, replace both paths with `$HOME/lab-22/systemd` — check with `pwd`.
 
-## Step 24: Enable and start the systemd unit
+## Step 26: Enable and start the systemd unit
+
 
 ```bash
 sudo systemctl daemon-reload
@@ -487,40 +507,24 @@ sudo systemctl status lab22-celery.service --no-pager
 
 The output ends with `active (running)`.
 
-## Step 25: Expose port 5000 in the lab UI
+## Step 27: Expose port 5000 in the lab UI
 
 The LB expose flow is identical to **Step 13** — follow it to map `LB_IP:5000` and capture `<FLASK-LB-URL>`.
 
 The only extra step for the systemd path: `worker.sh` runs **only** the Celery worker (not Flask), so start the Flask API in another terminal so the LB URL has something to forward to:
 
 ```bash
+cd ~/lab-22/systemd
 source .venv/bin/activate
 python -m app.api
 ```
 
 (For the supervisord path this is unnecessary — `supervisord.conf` already keeps Flask running under the `[program:flask]` entry.)
 
-## Step 26: Publish a task and confirm the worker handles it
-
-```bash
-curl -s -X POST <FLASK-LB-URL>/tasks \
-  -H "Content-Type: application/json" \
-  -d '{"x": 2, "y": 40}'
+## Step 28: Publish a task and confirm the worker handles it
 ```
 
-Wait a moment, then fetch the result:
-
-```bash
-curl -s <FLASK-LB-URL>/result/<task_id>
-```
-
-Expected output:
-
-```json
-{"state": "SUCCESS", "value": 42}
-```
-
-## Step 27: Trigger a crash and watch systemd restart
+## Step 29: Trigger a crash and watch systemd restart
 
 Find the worker PID and kill it:
 
@@ -533,7 +537,7 @@ sudo systemctl status lab22-celery.service --no-pager | head -10
 
 The output includes a new PID and `active (running)`.
 
-## Step 28: Stop the worker
+## Step 30: Stop the worker
 
 ```bash
 sudo systemctl stop lab22-celery.service
