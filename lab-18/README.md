@@ -6,7 +6,7 @@ This lab teaches the simplest possible background-task pattern using Flask and P
 
 ## Architecture
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-18/images/architecture.svg" alt="Lab 18 Architecture"></p>
+<p align="center"><img src="https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/lab-18/images/architecture.svg" alt="Lab 18 Architecture"></p>
 
 ## What You Will Build
 
@@ -50,7 +50,7 @@ python -c "import flask; print(flask.__version__)"
 
 The output should be a version string like `3.0.3`. If you see `ModuleNotFoundError: No module named 'flask'`, the venv is not active — go back to Step 2.
 
-![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-18/images/Flask%20Install.png)
+![](https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/lab-18/images/Flask%20Install.png)
 
 Keep the virtual environment active for the rest of the lab.
 
@@ -126,7 +126,7 @@ ls
 python app.py
 ```
 
-![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-18/images/python_app_py.png)
+![](https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/lab-18/images/python_app_py.png)
 
 ## Step 8: Check the health endpoint
 
@@ -136,7 +136,7 @@ Open a second terminal in Puku CLI and run:
 curl http://127.0.0.1:5000/
 ```
 
-![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-18/images/Testing.png)
+![](https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/lab-18/images/Testing.png)
 
 ## Step 9: Trigger a background task
 
@@ -148,7 +148,7 @@ curl -X POST http://127.0.0.1:5000/tasks \
   -d '{"duration": 5}'
 ```
 
-![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-18/images/Duration_5.png)
+![](https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/lab-18/images/Duration_5.png)
 
 The response arrives in milliseconds. The terminal from Step 7 keeps printing progress messages for the next 5 seconds.
 
@@ -162,7 +162,7 @@ curl -X POST http://127.0.0.1:5000/tasks -H "Content-Type: application/json" -d 
 curl -X POST http://127.0.0.1:5000/tasks -H "Content-Type: application/json" -d '{"duration": 2}'
 ```
 
-![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-18/images/output-4.png)
+![](https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/lab-18/images/output-4.png)
 
 All three responses return immediately. The terminal shows three tasks running in parallel and finishing at different times.
 

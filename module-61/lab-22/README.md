@@ -8,7 +8,7 @@ This lab shows two ways to keep a Celery worker running after a crash. The first
 
 ### Supervisord path (Steps 1–16)
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22/images/architecture-supervisord.svg" alt="Lab 22 supervisord architecture"></p>
+<p align="center"><img src="https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/module-61/lab-22/images/architecture-supervisord.svg" alt="Lab 22 supervisord architecture"></p>
 
 Both the Flask API and the Celery worker run as `supervisord` programs inside one container. `supervisord` is PID 1, so it owns both processes, restarts them on crash, and writes their logs to bind-mounted files.
 
@@ -44,7 +44,7 @@ docker --version
 docker compose version
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22/images/docker%20--version.png" alt="Docker and Compose versions"></p>
+<p align="center"><img src="https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/module-61/lab-22/images/docker%20--version.png" alt="Docker and Compose versions"></p>
 
 ## Step 3: Start the broker stack
 
@@ -87,7 +87,7 @@ docker compose ps
 
 `lab22-rabbitmq` shows `healthy` once it accepts AMQP.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22/images/Step%203%20docker%20compose%20up.png" alt="Broker stack running"></p>
+<p align="center"><img src="https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/module-61/lab-22/images/Step%203%20docker%20compose%20up.png" alt="Broker stack running"></p>
 
 ## Step 4: Write the application requirements
 
@@ -279,7 +279,7 @@ docker compose up -d
 
 `--no-cache` forces a clean image build so the new `requirements.txt` from Step 4 always lands in the image layer. A plain `--build` is not enough on some hosts — BuildKit can reuse the old `pip install` layer even after `requirements.txt` changes, which leaves the image without `setuptools` and `supervisord` exits with `ModuleNotFoundError`.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22/images/Step%2011%20Build%20and%20start%20the%20app.png" alt="App stack built and started"></p>
+<p align="center"><img src="https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/module-61/lab-22/images/Step%2011%20Build%20and%20start%20the%20app.png" alt="App stack built and started"></p>
 
 ## Step 12: Confirm both programs are running
 
@@ -289,7 +289,7 @@ docker exec lab22-app supervisorctl status
 
 Both `web` and `celery` show `RUNNING` as child processes of `supervisord`.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22/images/Step%2012%20Confirm%20both%20programs%20are%20running.png" alt="supervisorctl status showing web + celery RUNNING"></p>
+<p align="center"><img src="https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/module-61/lab-22/images/Step%2012%20Confirm%20both%20programs%20are%20running.png" alt="supervisorctl status showing web + celery RUNNING"></p>
 
 ## Step 13: Expose port 5000 in the lab UI
 
@@ -313,8 +313,8 @@ Use the first IP printed as `LB_IP`.
 
 Click **Expose**. Copy the generated `.lb.poridhi.io` URL — the rest of the lab uses it as `<FLASK-LB-URL>`.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22/images/hostname%20-I.png" alt="hostname -I output"></p>
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22/images/LB_IP.%20Loadbalancer.png" alt="Load Balancer modal with LB_IP entry"></p>
+<p align="center"><img src="https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/module-61/lab-22/images/hostname%20-I.png" alt="hostname -I output"></p>
+<p align="center"><img src="https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/module-61/lab-22/images/LB_IP.%20Loadbalancer.png" alt="Load Balancer modal with LB_IP entry"></p>
 
 ## Step 14: Trigger a job from the LB URL
 
@@ -332,8 +332,8 @@ tail -f ~/lab-22/app/logs/celery.log
 
 Press `Ctrl+C` to stop tailing.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22/images/Step%2014%20Trigger%20a%20job%20from%20the%20LB%20URL.png" alt="Triggering a job via the LB URL"></p>
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22/images/Step%2014%20Tail%20the%20worker%20log.png" alt="Worker log tail showing job ticks"></p>
+<p align="center"><img src="https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/module-61/lab-22/images/Step%2014%20Trigger%20a%20job%20from%20the%20LB%20URL.png" alt="Triggering a job via the LB URL"></p>
+<p align="center"><img src="https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/module-61/lab-22/images/Step%2014%20Tail%20the%20worker%20log.png" alt="Worker log tail showing job ticks"></p>
 
 ## Step 15: Kill the worker and watch it recover
 
@@ -347,7 +347,7 @@ docker exec lab22-app supervisorctl status
 
 `supervisorctl signal KILL celery` forwards `SIGKILL` to the worker through the supervisor's own RPC channel, so no extra tools (`pkill`, `pgrep`, `kill`) are needed inside the container.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22/images/Step%2015%20Kill%20the%20worker%20and%20watch%20it%20recover.png" alt="Worker back to RUNNING with a new PID"></p>
+<p align="center"><img src="https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/module-61/lab-22/images/Step%2015%20Kill%20the%20worker%20and%20watch%20it%20recover.png" alt="Worker back to RUNNING with a new PID"></p>
 
 ## Step 16: Stop the stack
 
@@ -356,11 +356,11 @@ cd ~/lab-22/app && docker compose down
 cd ~/lab-22/broker && docker compose down -v
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22/images/Step%2016%20Stop%20the%20stack.png" alt="App and broker stacks stopped"></p>
+<p align="center"><img src="https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/module-61/lab-22/images/Step%2016%20Stop%20the%20stack.png" alt="App and broker stacks stopped"></p>
 
 ### systemd path (Steps 17–30)
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22/images/architecture-systemd.svg" alt="Lab 22 systemd architecture"></p>
+<p align="center"><img src="https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/module-61/lab-22/images/architecture-systemd.svg" alt="Lab 22 systemd architecture"></p>
 
 Only RabbitMQ runs in a container. The Flask API and the Celery worker run as host processes from a project-local `venv`, and the worker is supervised by a `systemd` unit (`lab22-celery.service`) with `Restart=always`. The worker survives container restarts and host reboots without going through Docker at all.
 
@@ -374,7 +374,7 @@ docker compose ps
 
 `lab22-rabbitmq` shows `healthy`.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22/images/Step%2017%20Reuse%20the%20broker%20stack%20for%20systemd.png" alt="Broker stack reused for the systemd path"></p>
+<p align="center"><img src="https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/module-61/lab-22/images/Step%2017%20Reuse%20the%20broker%20stack%20for%20systemd.png" alt="Broker stack reused for the systemd path"></p>
 
 ## Step 18: Create the systemd-only project directory
 
@@ -489,7 +489,7 @@ Confirm the worker can boot in the foreground. Press `Ctrl+C` after you see `cel
 ./worker.sh
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22/images/Step%2024%20Install%20the%20worker%20dependencies.png" alt="Worker booting in the foreground and reporting ready"></p>
+<p align="center"><img src="https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/module-61/lab-22/images/Step%2024%20Install%20the%20worker%20dependencies.png" alt="Worker booting in the foreground and reporting ready"></p>
 
 ## Step 25: Write the systemd unit file
 
@@ -543,7 +543,7 @@ python -m app.api
 
 (For the supervisord path this is unnecessary — `supervisord.conf` already keeps Flask running under the `[program:flask]` entry.)
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22/images/Step%2027%20Expose%20port%205000%20in%20the%20lab%20UI.png" alt="Expose port 5000 in the lab UI for the systemd path"></p>
+<p align="center"><img src="https://github.com/mahiiabdullah/Poridhi-Labs/blob/main/module-61/lab-22/images/Step%2027%20Expose%20port%205000%20in%20the%20lab%20UI.png" alt="Expose port 5000 in the lab UI for the systemd path"></p>
 
 ## Step 28: Publish a task and confirm the worker handles it
 
