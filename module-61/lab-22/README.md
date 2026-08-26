@@ -2,11 +2,17 @@
 
 **Module 61 — Deployment and Monitoring**
 
-This lab consolidates the Flask API and Celery worker into a single container. `supervisord` runs as PID 1, supervises both processes, and restarts either on crash. Per-process log files are mounted to the host for tailing.
+This lab shows two ways to keep a Celery worker running after a crash. The first path runs both the Flask API and the worker inside one container with `supervisord` as PID 1. The second path runs only RabbitMQ in a container and supervises the worker on the host with a `systemd` unit. Pick one path and follow only its steps; both share the same broker.
 
 ## Architecture
 
-<p align="center"><img src="./images/architecture.svg" alt="Lab 22 Architecture"></p>
+### Supervisord path (Steps 1–16)
+
+<p align="center"><img src="./images/architecture-supervisord.svg" alt="Lab 22 supervisord architecture"></p>
+
+Both the Flask API and the Celery worker run as `supervisord` programs inside one container. `supervisord` is PID 1, so it owns both processes, restarts them on crash, and writes their logs to bind-mounted files.
+
+The systemd diagram appears under its own path below, before Step 17.
 
 ## Concept
 
@@ -333,6 +339,12 @@ docker exec lab22-app supervisorctl status
 cd ~/lab-22/app && docker compose down
 cd ~/lab-22/broker && docker compose down -v
 ```
+
+### systemd path (Steps 17–28)
+
+<p align="center"><img src="./images/architecture-systemd.svg" alt="Lab 22 systemd architecture"></p>
+
+Only RabbitMQ runs in a container. The Flask API and the Celery worker run as host processes from a project-local `venv`, and the worker is supervised by a `systemd` unit (`lab22-celery.service`) with `Restart=always`. The worker survives container restarts and host reboots without going through Docker at all.
 
 ## Step 17: Reuse the broker stack for `systemd`
 
