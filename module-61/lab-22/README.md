@@ -663,3 +663,7 @@ sudo rm /etc/systemd/system/lab22-celery.service
 sudo systemctl daemon-reload
 ```
 
+## Conclusion
+
+You ran the same Celery worker under two supervisors and watched both bring it back from a crash. `supervisord` is the right pick when the worker shares a container with the Flask API — its config file is simple and `supervisorctl` exposes start, stop, and restart over a single socket. `systemd` is the right pick when the worker runs on the host alongside the broker — it ships with the OS, starts on boot, and is the standard way to declare long-running services. Pick whichever matches the host you are deploying onto.
+
