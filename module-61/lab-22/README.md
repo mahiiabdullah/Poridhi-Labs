@@ -489,32 +489,16 @@ The output ends with `active (running)`.
 
 ## Step 25: Expose port 5000 in the lab UI
 
-Start the Flask API in another terminal so you can hit it from the LB URL:
+The LB expose flow is identical to **Step 13** — follow it to map `LB_IP:5000` and capture `<FLASK-LB-URL>`.
+
+The only extra step for the systemd path: `worker.sh` runs **only** the Celery worker (not Flask), so start the Flask API in another terminal so the LB URL has something to forward to:
 
 ```bash
 source .venv/bin/activate
 python -m app.api
 ```
 
-Open the **Load Balancer** modal in the lab UI (top-right). Run this once to find the IP to enter:
-
-```bash
-hostname -I
-```
-
-Sample output:
-
-```
-10.61.7.107 172.17.0.1 100.80.176.159 172.18.0.1
-```
-
-Use the first IP printed as `LB_IP`.
-
-| Enter IP  | Enter Port             |
-|-----------|------------------------|
-| `LB_IP`   | `5000` (Flask API)     |
-
-Click **Expose**. Copy the generated `.lb.poridhi.io` URL — the rest of the lab uses it as `<FLASK-LB-URL>`.
+(For the supervisord path this is unnecessary — `supervisord.conf` already keeps Flask running under the `[program:flask]` entry.)
 
 ## Step 26: Publish a task and confirm the worker handles it
 
