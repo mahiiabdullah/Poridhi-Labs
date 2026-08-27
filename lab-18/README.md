@@ -6,7 +6,7 @@ This lab teaches the simplest possible background-task pattern using Flask and P
 
 ## Architecture
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-18/images/architecture.svg" alt="Lab 18 Architecture"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-18/images/architecture-animated.svg" alt="Lab 18 Architecture"></p>
 
 ## What You Will Build
 
