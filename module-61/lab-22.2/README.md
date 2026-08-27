@@ -26,11 +26,63 @@ When the worker runs on the host next to the broker, you need something that own
 
 ## What You Will Build
 
-A `lab22-celery.service` unit that supervises the host-side Celery worker. RabbitMQ runs in a container (same `lab22-broker-net` style stack from [Lab 22.1](../lab-22.1/README.md) Step 3, reused here). The Flask API runs on the host from a separate terminal so the LB URL has something to forward to. You publish a task, kill the worker, watch `systemd` restart it, and confirm the task completes.
+A `lab22-celery.service` unit that supervises the host-side Celery worker. RabbitMQ runs in a container on a dedicated `lab22-broker-net` Docker network. The Flask API runs on the host from a separate terminal so the LB URL has something to forward to. You publish a task, kill the worker, watch `systemd` restart it, and confirm the task completes.
 
-## Step 1: Reuse the broker stack
+## Step 1: Create the broker project directory
 
-This lab assumes the same `lab22-broker-net` RabbitMQ stack from [Lab 22.1](../lab-22.1/README.md) Step 3 (or [Lab 21](../lab-21/README.md) if you already have a broker up). Start it if it isn't running:
+This lab keeps RabbitMQ in a container, separate from the host-side worker. The broker files live under `~/lab-22/broker/`:
+
+```bash
+mkdir -p ~/lab-22/broker
+```
+
+## Step 2: Confirm Docker and Compose
+
+The lab uses `docker compose` (the v2 CLI plugin, not the legacy `docker-compose` binary):
+
+```bash
+docker --version
+docker compose version
+```
+
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22.2/images/docker%20--version.png" alt="Docker and Compose versions"></p>
+
+## Step 3: Write the broker `docker-compose.yml`
+
+RabbitMQ runs on a dedicated bridge network so its hostname is stable for the host-side worker (`amqp://guest:guest@localhost:5672//` works because `5672` is published to the host):
+
+```bash
+cat > ~/lab-22/broker/docker-compose.yml << 'EOF'
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: lab22-rabbitmq
+    hostname: lab22-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  rabbitmq_data:
+
+networks:
+  default:
+    name: lab22-broker-net
+    driver: bridge
+EOF
+```
+
+## Step 4: Start the broker stack
 
 ```bash
 cd ~/lab-22/broker
@@ -38,11 +90,11 @@ docker compose up -d
 docker compose ps
 ```
 
-`lab22-rabbitmq` shows `healthy`.
+`lab22-rabbitmq` shows `healthy` once it accepts AMQP.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22.2/images/Step%2017%20Reuse%20the%20broker%20stack%20for%20systemd.png" alt="Broker stack reused for the systemd path"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22.2/images/Step%203%20docker%20compose%20up.png" alt="Broker stack running for the systemd path"></p>
 
-## Step 2: Create the systemd-only project directory
+## Step 5: Create the systemd-only project directory
 
 This lab lives in a sibling directory under `~/lab-22/systemd/` so the project files don't collide with anything else in `~/lab-22/`:
 
@@ -53,7 +105,7 @@ cd ~/lab-22/systemd
 
 Every command below is relative to `~/lab-22/systemd/`.
 
-## Step 3: Write `requirements.txt`
+## Step 6: Write `requirements.txt`
 
 ```bash
 cat > requirements.txt << 'EOF'
@@ -63,7 +115,7 @@ kombu==5.3.7
 EOF
 ```
 
-## Step 4: Write `app/__init__.py`
+## Step 7: Write `app/__init__.py`
 
 ```bash
 touch app/__init__.py
@@ -71,7 +123,7 @@ touch app/__init__.py
 
 This marks `app/` as a Python package so `from app.celery_app import add` works.
 
-## Step 5: Write `app/celery_app.py`
+## Step 8: Write `app/celery_app.py`
 
 ```bash
 cat > app/celery_app.py << 'EOF'
@@ -96,9 +148,9 @@ def add(x: int, y: int) -> int:
 EOF
 ```
 
-The broker points at `localhost` because the broker stack published `5672:5672` to the host (Step 1), and this worker runs on the host under `systemd`.
+The broker points at `localhost` because the broker stack published `5672:5672` to the host (Step 4), and this worker runs on the host under `systemd`.
 
-## Step 6: Write `app/api.py`
+## Step 9: Write `app/api.py`
 
 ```bash
 cat > app/api.py << 'EOF'
@@ -124,7 +176,7 @@ if __name__ == "__main__":
 EOF
 ```
 
-## Step 7: Write `worker.sh`
+## Step 10: Write `worker.sh`
 
 ```bash
 cat > worker.sh << 'EOF'
@@ -139,7 +191,7 @@ chmod +x worker.sh
 
 `source .venv/bin/activate` is required because `systemd` starts the unit with a minimal `PATH` that does **not** include `~/lab-22/systemd/.venv/bin/`. Activating the venv inside the script puts `celery` on `PATH` regardless of what environment `systemd` passes. The venv must live next to `worker.sh` (i.e. inside `~/lab-22/systemd/`), not in `$HOME`.
 
-## Step 8: Install the worker dependencies
+## Step 11: Install the worker dependencies
 
 The venv lives inside the project directory:
 
@@ -157,7 +209,7 @@ Confirm the worker can boot in the foreground. Press `Ctrl+C` after you see `cel
 
 <p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22.2/images/Step%2024%20Install%20the%20worker%20dependencies.png" alt="Worker booting in the foreground and reporting ready"></p>
 
-## Step 9: Write the systemd unit file
+## Step 12: Write the systemd unit file
 
 ```bash
 sudo tee /etc/systemd/system/lab22-celery.service >/dev/null <<'EOF'
@@ -183,7 +235,7 @@ EOF
 
 The Poridhi lab runs as user `poridhian` (home `/home/poridhian`), so the unit uses `/home/poridhian/lab-22/systemd`. On a different host, replace both paths with `$HOME/lab-22/systemd` — check with `pwd`.
 
-## Step 10: Enable and start the systemd unit
+## Step 13: Enable and start the systemd unit
 
 ```bash
 sudo systemctl daemon-reload
@@ -194,7 +246,7 @@ sudo systemctl status lab22-celery.service --no-pager
 
 The output ends with `active (running)`.
 
-## Step 11: Expose port 5000 in the lab UI
+## Step 14: Expose port 5000 in the lab UI
 
 `worker.sh` runs **only** the Celery worker (not Flask), so start the Flask API in another terminal so the LB URL has something to forward to:
 
@@ -228,9 +280,9 @@ Click **Expose**. Copy the generated `.lb.poridhi.io` URL — the rest of the la
 
 <p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22.2/images/Step%2027%20Expose%20port%205000%20in%20the%20lab%20UI.png" alt="Expose port 5000 in the lab UI for the systemd path"></p>
 
-## Step 12: Publish a task and confirm the worker handles it
+## Step 15: Publish a task and confirm the worker handles it
 
-Open a **second terminal** (the Flask API must keep running from Step 11) and run:
+Open a **second terminal** (the Flask API must keep running from Step 14) and run:
 
 ```bash
 curl -s -X POST <FLASK-LB-URL>/tasks \
@@ -273,7 +325,7 @@ You can also confirm the worker actually executed the task by tailing its log:
 tail -n 20 /var/log/lab22-celery.out.log
 ```
 
-## Step 13: Trigger a crash and watch systemd restart
+## Step 16: Trigger a crash and watch systemd restart
 
 Find the worker PID and kill it. In the **terminal running Flask (Terminal A)**, publish one more task first so the worker log has fresh activity to compare against after the restart:
 
@@ -292,7 +344,7 @@ sleep 4
 sudo systemctl status lab22-celery.service --no-pager | head -10
 ```
 
-The `Main PID` line must show a **new** PID and the status must end with `active (running)`. If the status shows `failed`, double-check the unit has `Restart=always` (Step 9) and run `sudo systemctl daemon-reload` before retrying.
+The `Main PID` line must show a **new** PID and the status must end with `active (running)`. If the status shows `failed`, double-check the unit has `Restart=always` (Step 12) and run `sudo systemctl daemon-reload` before retrying.
 
 Inspect the journal to see exactly what `systemd` recorded for the crash + restart:
 
@@ -308,7 +360,7 @@ The worker log also keeps an append-only record (configured in the unit's `Stand
 tail -n 30 /var/log/lab22-celery.out.log
 ```
 
-## Step 14: Stop the worker
+## Step 17: Stop the worker
 
 Stop the `systemd` unit, the broker stack, and the Flask terminal:
 
