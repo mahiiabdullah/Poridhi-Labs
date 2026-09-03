@@ -356,4 +356,4 @@ cd ~/lab-22/broker && docker compose down -v
 
 ## Conclusion
 
-You ran both the Flask API and the Celery worker inside one container under `supervisord`, watched it bring the worker back after a `SIGKILL`, and tailed per-process logs from the host. Pick this path when the worker shares a container with the API; for host-level supervision use [Lab 22.2](../lab-22.2/README.md).
+You ran both the Flask API and the Celery worker inside one container under `supervisord`, watched it bring the worker back after a `SIGKILL`, and tailed per-process logs from the host. Pick this path when the worker shares a container with the API.
