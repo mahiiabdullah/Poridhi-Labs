@@ -4,8 +4,6 @@
 
 This lab keeps the Celery worker and the Flask API alive inside a single container by using `supervisord` as PID 1. You kill the worker, watch `supervisord` bring it back up, and tail per-process logs from the host.
 
-> Looking for the **systemd** path instead? See [Lab 22.2](../lab-22.2/README.md).
-
 ## Architecture
 
 <p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-22.1/images/architecture-supervisord.svg" alt="Lab 22.1 supervisord architecture"></p>
