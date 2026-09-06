@@ -18,15 +18,11 @@ Install Flask inside a project-local virtual environment so the dependency stays
 
 ### Step 1: Create the virtual environment
 
-On a fresh Debian/Ubuntu image (including the Poridhi sandbox) `python` is not on `PATH` — only `python3`. Install Python, the venv module, pip, and the `python-is-python3` shim so every later command in this lab resolves `python` and `pip` exactly as written:
-
 ```bash
 sudo apt update
 sudo apt install -y python3 python3-venv python3-pip python-is-python3
 python -m venv venv
 ```
-
-`python-is-python3` creates a `/usr/bin/python` symlink pointing at `python3`, so `python` and `pip` work without rewriting any later step. If you are on a host where `python` is already on `PATH`, you can skip the `apt install` block and run only `python -m venv venv`.
 
 ### Step 2: Activate the virtual environment
 
