@@ -103,9 +103,10 @@
   <text x="260" y="244" text-anchor="start" font-size="11" font-weight="bold" fill="#1a1a1a">202 Accepted</text>
 
   <!-- Arrow 3: Start Task (Flask right-edge -> Background Task left-edge). Elbow path: right, up, right, into the box -->
-  <path d="M 330,345 H 400 V 165 H 456" fill="none" stroke="#d6ecf3" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="arrow" d="M 330,345 H 400 V 165 H 456" fill="none" stroke="#0e7490" stroke-width="2" stroke-dasharray="8,6" marker-end="url(#arrow)">
+  <path class="arrow" d="M 330,345 H 400 V 165 H 456" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="8,6" marker-end="url(#arrow)">
     <animate attributeName="stroke-dashoffset" values="14;0" dur="1.2s" repeatCount="indefinite"/>
   </path>
-  <text x="400" y="257" text-anchor="middle" font-size="11" font-weight="bold" fill="#0e7490">Start Task</text>
+  <!-- Halo behind the Start Task label so the elbow path does not intersect the text -->
+  <rect x="364" y="247" width="72" height="14" rx="3" ry="3" fill="#ffffff" stroke="none"/>
+  <text x="400" y="257" text-anchor="middle" font-size="11" font-weight="bold" fill="#1a1a1a">Start Task</text>
 </svg>
