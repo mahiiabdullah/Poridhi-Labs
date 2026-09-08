@@ -279,7 +279,7 @@ Open the `.lb.poridhi.io` URL for port 15672. Login with:
 
 - Username: `guest`
 - Password: `guest`
-
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/RabbitMQ_Login.png)
 The dashboard shows three sections at the top: Overview, Connections, Channels. The queue view is empty for now.
 
 ![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/Step%2013.png)
@@ -318,6 +318,7 @@ The `celery` queue appears with these columns:
 - Messages: `0`
 
 The **D** badge confirms the queue is durable and survives a broker restart.
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/Queues_tracing.png)
 
 ## Step 16: Verify durable queues by restarting RabbitMQ
 
@@ -372,6 +373,8 @@ docker compose logs -f celery
 You see a new `[Task a1b2c3d4] started` line followed by `processing (1/30)`. The same `task_id`, restarted from scratch. With early acks, this task would have been silently lost.
 
 ![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/docker%20compose%20up%20d%20celery.png)
+
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/Celery.png)
 
 ## Step 18: Stop the stack
 
