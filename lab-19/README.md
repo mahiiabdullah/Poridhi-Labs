@@ -279,7 +279,9 @@ Open the `.lb.poridhi.io` URL for port 15672. Login with:
 
 - Username: `guest`
 - Password: `guest`
+
 ![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/RabbitMQ_Login.png)
+
 The dashboard shows three sections at the top: Overview, Connections, Channels. The queue view is empty for now.
 
 ![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-19/images/Step%2013.png)
