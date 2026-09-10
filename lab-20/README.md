@@ -435,6 +435,14 @@ Press `Ctrl+C` to detach from the log view — the worker keeps running.
 
 The retries now happen at exactly 1s, 2s, 4s, 4s, 4s. The Celery log lines read `retry: Retry in 1s`, `Retry in 2s`, `Retry in 4s`, `Retry in 4s`, `Retry in 4s` between attempts, ending with `raised unexpected: TransientError(...)` after attempt 6.
 
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/Step-15-Watch-the-worker%20(1).png)
+
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/Step-15-Watch-the-worker%20(2).png)
+
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/Step-15-Watch-the-worker%20(3).png)
+
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-20/images/Step-15-Watch-the-worker%284%29.png)
+
 ## Step 16: Stop the stack
 
 ```bash
