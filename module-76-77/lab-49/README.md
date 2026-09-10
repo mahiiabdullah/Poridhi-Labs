@@ -2,7 +2,7 @@
 
 **Module 76 — Elasticsearch Cluster Setup**
 
-This lab provisions three EC2 instances and installs Java 17 and Elasticsearch 8.x on each one. By the end you have three identical nodes ready to be configured into a cluster in Lab 50.
+This lab provisions three Elasticsearch nodes on the Poridhi lab host using Docker Compose. Each node runs in its own container on a shared bridge network so they can discover each other by service name. By the end you have three Elasticsearch containers ready to be wired into a cluster in the next lab.
 
 ## Architecture
 
@@ -10,395 +10,314 @@ This lab provisions three EC2 instances and installs Java 17 and Elasticsearch 8
 
 ## Concept
 
-| Term                | Description                                                                                           |
-|---------------------|-------------------------------------------------------------------------------------------------------|
-| EC2 Instance        | A virtual machine in AWS that runs your operating system and applications.                            |
-| Security Group      | A virtual firewall that controls which ports are open and who can reach them.                          |
+| Term                | Description                                                                                            |
+|---------------------|--------------------------------------------------------------------------------------------------------|
+| Docker Compose      | A tool for defining and running multi-container applications using a single declarative YAML file.     |
+| Docker Network      | A virtual bridge network that lets containers resolve each other by service name without hard-coded IPs. |
+| Named Volume        | A persistent storage volume managed by Docker, identified by name, that survives container restarts.   |
 | Elasticsearch       | A distributed search and analytics engine that stores data across a cluster of nodes.                 |
-| JVM (Java 17)       | The runtime Elasticsearch runs on. Elasticsearch 8.x bundles its own JDK but the host JDK is useful for tooling. |
+| Container           | A lightweight, isolated process that runs an application on top of the host OS kernel.                |
 | Port 9200           | The HTTP port Elasticsearch exposes for REST API requests (indexing, searching, cluster health).       |
 | Port 9300           | The transport port nodes use to talk to each other for cluster coordination and data replication.      |
 
+A `docker-compose.yml` with three `elasticsearch` services on the same bridge network is the Poridhi equivalent of launching three EC2 instances. Each service gets a stable DNS name — `es-master`, `es-data-1`, `es-data-2` — that the others use for discovery. The named volume replaces the EC2 EBS root volume so data and cluster state survive container restarts.
+
 ## What You Will Build
 
-Three EC2 instances (Ubuntu 22.04, `t3.medium`) in the same VPC and security group. Each instance has OpenJDK 17 and Elasticsearch 8.x installed and verified. The Elasticsearch service is installed but **not yet started** — Lab 50 handles configuration and cluster formation.
+Three Elasticsearch 8.x containers running on one host, networked together:
 
-## Step 1: Create a key pair
+| Service       | Role             | Purpose                                    |
+|---------------|------------------|--------------------------------------------|
+| `es-master`   | `[master]`       | Dedicated cluster manager — no data stored |
+| `es-data-1`   | `[data]`         | Stores index shards, runs queries          |
+| `es-data-2`   | `[data, ingest]` | Stores shards and runs ingest pipelines    |
 
-If you do not already have an EC2 key pair, create one. This key is used to SSH into every instance.
+Each service binds port 9200 and 9300 on the host. This lab only starts the containers with a minimal config — the next lab assigns the distinct roles and brings the cluster up.
 
-```bash
-aws ec2 create-key-pair \
-  --key-name es-cluster-key \
-  --key-type ed25519 \
-  --query 'KeyMaterial' \
-  --output text > es-cluster-key.pem
+## Prerequisites
 
-chmod 400 es-cluster-key.pem
-```
-
-If you already have a key pair, skip this step and substitute your key name in later commands.
-
-## Step 2: Create a security group
-
-The group opens three ports: SSH for management, 9200 for the Elasticsearch HTTP API, and 9300 for node-to-node transport.
+- Docker and Docker Compose are installed on the lab host:
 
 ```bash
-SG_ID=$(aws ec2 create-security-group \
-  --group-name es-cluster-sg \
-  --description "Elasticsearch cluster - SSH, HTTP API, transport" \
-  --query 'GroupId' \
-  --output text)
-
-echo "Security Group ID: $SG_ID"
+docker --version
+docker compose version
 ```
+- You can reach the Puku CLI terminal on the lab host.
+- About 2 GB of free RAM for three Elasticsearch containers (each defaults to 1 GB heap).
 
-Open SSH from anywhere (restrict the CIDR in production):
+## Step 1: Create the project directory
 
 ```bash
-aws ec2 authorize-security-group-ingress \
-  --group-id $SG_ID \
-  --protocol tcp \
-  --port 22 \
-  --cidr 0.0.0.0/0
+mkdir -p ~/lab-49
+cd ~/lab-49
 ```
 
-Open the Elasticsearch HTTP API:
+This directory will hold `docker-compose.yml` plus the persistent data volumes for each node.
+
+## Step 2: Write the docker-compose file
+
+Create `docker-compose.yml`:
 
 ```bash
-aws ec2 authorize-security-group-ingress \
-  --group-id $SG_ID \
-  --protocol tcp \
-  --port 9200 \
-  --cidr 0.0.0.0/0
+cat > docker-compose.yml << 'EOF'
+services:
+  es-master:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    container_name: es-master
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es_master_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+
+  es-data-1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    container_name: es-data-1
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es_data1_data:/usr/share/elasticsearch/data
+    ports:
+      - "9201:9200"
+      - "9301:9300"
+
+  es-data-2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    container_name: es-data-2
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es_data2_data:/usr/share/elasticsearch/data
+    ports:
+      - "9202:9200"
+      - "9302:9300"
+
+volumes:
+  es_master_data:
+  es_data1_data:
+  es_data2_data:
+
+networks:
+  default:
+    name: lab49_net
+    driver: bridge
+EOF
 ```
 
-Open transport traffic between nodes in the same security group:
+Each container uses `discovery.type=single-node` for now — this lets it boot in isolation. The next lab switches the cluster to multi-node configuration with a shared `cluster.name`.
+
+`ES_JAVA_OPTS=-Xms512m -Xmx512m` keeps the JVM heap small (512 MB) so three containers can run comfortably on the lab host.
+
+## Step 3: Pull the Elasticsearch image
 
 ```bash
-aws ec2 authorize-security-group-ingress \
-  --group-id $SG_ID \
-  --protocol tcp \
-  --port 9300 \
-  --source-group $SG_ID
+docker compose pull
 ```
 
-Verify all three rules exist:
+The image is large — about 1 GB. Wait for the download to finish.
+
+## Step 4: Confirm the compose file is valid
 
 ```bash
-aws ec2 describe-security-groups \
-  --group-ids $SG_ID \
-  --query 'SecurityGroups[0].IpPermissions' \
-  --output table
+docker compose config
 ```
 
-## Step 3: Look up the Ubuntu 22.04 AMI
+Expected output: the same YAML is printed back with all variables resolved. No errors.
 
-The AMI ID changes per region. This command finds the latest official Canonical AMI for your current region:
+## Step 5: Start the three containers
 
 ```bash
-AMI_ID=$(aws ssm get-parameters \
-  --names /aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp3/ami-id \
-  --query 'Parameters[0].Value' \
-  --output text)
-
-echo "AMI ID: $AMI_ID"
+docker compose up -d
 ```
 
-If the SSM lookup fails, go to the [Ubuntu AMI Locator](https://cloud-images.ubuntu.com/locator/ec2/) and pick the `22.04 LTS amd64 hvm:ebs-gp3` AMI for your region.
+The `-d` flag runs the containers in the background. Elasticsearch takes 30–60 seconds per node to become healthy.
 
-## Step 4: Launch three EC2 instances
-
-Launch three `t3.medium` instances (2 vCPU, 4 GB RAM — the minimum recommended for Elasticsearch).
-
-**Instance 1 — es-master:**
+## Step 6: Check the container status
 
 ```bash
-INSTANCE_1=$(aws ec2 run-instances \
-  --image-id $AMI_ID \
-  --instance-type t3.medium \
-  --key-name es-cluster-key \
-  --security-group-ids $SG_ID \
-  --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=es-master}]' \
-  --query 'Instances[0].InstanceId' \
-  --output text)
-
-echo "es-master: $INSTANCE_1"
-```
-
-**Instance 2 — es-data-1:**
-
-```bash
-INSTANCE_2=$(aws ec2 run-instances \
-  --image-id $AMI_ID \
-  --instance-type t3.medium \
-  --key-name es-cluster-key \
-  --security-group-ids $SG_ID \
-  --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=es-data-1}]' \
-  --query 'Instances[0].InstanceId' \
-  --output text)
-
-echo "es-data-1: $INSTANCE_2"
-```
-
-**Instance 3 — es-data-2:**
-
-```bash
-INSTANCE_3=$(aws ec2 run-instances \
-  --image-id $AMI_ID \
-  --instance-type t3.medium \
-  --key-name es-cluster-key \
-  --security-group-ids $SG_ID \
-  --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=es-data-2}]' \
-  --query 'Instances[0].InstanceId' \
-  --output text)
-
-echo "es-data-2: $INSTANCE_3"
-```
-
-## Step 5: Wait for the instances to reach `running` state
-
-```bash
-aws ec2 wait instance-running \
-  --instance-ids $INSTANCE_1 $INSTANCE_2 $INSTANCE_3
-
-echo "All three instances are running."
-```
-
-## Step 6: Collect the public IPs
-
-```bash
-aws ec2 describe-instances \
-  --instance-ids $INSTANCE_1 $INSTANCE_2 $INSTANCE_3 \
-  --query 'Reservations[].Instances[].[Tags[?Key==`Name`].Value|[0],PublicIpAddress,PrivateIpAddress]' \
-  --output table
-```
-
-Sample output:
-
-```
--------------------------------------------
-|           DescribeInstances             |
-+------------+----------------+-----------+
-| es-master  | 54.210.11.22   | 10.0.1.10 |
-| es-data-1  | 54.210.33.44   | 10.0.1.11 |
-| es-data-2  | 54.210.55.66   | 10.0.1.12 |
-+------------+----------------+-----------+
-```
-
-Save these IPs — you will need the **private IPs** in Lab 50 for `elasticsearch.yml` and the **public IPs** for SSH.
-
-```bash
-IP_MASTER=<es-master-public-ip>
-IP_DATA1=<es-data-1-public-ip>
-IP_DATA2=<es-data-2-public-ip>
-```
-
-Replace the placeholders with the real IPs from the table above.
-
-## Step 7: SSH into es-master and update packages
-
-```bash
-ssh -i es-cluster-key.pem ubuntu@$IP_MASTER
-```
-
-Once connected:
-
-```bash
-sudo apt update && sudo apt upgrade -y
-```
-
-## Step 8: Install Java 17
-
-Elasticsearch 8.x ships with a bundled JDK, but installing a system JDK gives you access to standard Java tools (`jps`, `jstack`, `jmap`) for debugging:
-
-```bash
-sudo apt install -y openjdk-17-jdk
-```
-
-Verify the installation:
-
-```bash
-java -version
+docker compose ps
 ```
 
 Expected output:
 
 ```
-openjdk version "17.0.x" 2024-xx-xx
-OpenJDK Runtime Environment (build 17.0.x+x-Ubuntu-...)
-OpenJDK 64-Bit Server VM (build 17.0.x+x-Ubuntu-..., mixed mode, sharing)
+NAME        IMAGE                                                 COMMAND                  SERVICE     CREATED         STATUS                          PORTS
+es-master   docker.elastic.co/elasticsearch/elasticsearch:8.13.4  "/bin/tini /usr/local…"   es-master   X seconds ago   Up X seconds (health: starting)  0.0.0.0:9200->9200/tcp, 0.0.0.0:9300->9300/tcp
+es-data-1   docker.elastic.co/elasticsearch/elasticsearch:8.13.4  "/bin/tini /usr/local…"   es-data-1   X seconds ago   Up X seconds (health: starting)  0.0.0.0:9201->9200/tcp, 0.0.0.0:9301->9300/tcp
+es-data-2   docker.elastic.co/elasticsearch/elasticsearch:8.13.4  "/bin/tini /usr/local…"   es-data-2   X seconds ago   Up X seconds (health: starting)  0.0.0.0:9202->9200/tcp, 0.0.0.0:9302->9300/tcp
 ```
 
-## Step 9: Import the Elasticsearch GPG key
+Each row shows `Up` with `(health: starting)`. After about a minute the status changes to `(healthy)`.
+
+## Step 7: Tail the master node logs
 
 ```bash
-wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | \
-  sudo gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg
+docker compose logs -f es-master
 ```
 
-## Step 10: Add the Elasticsearch APT repository
+The first time the container starts, Elasticsearch prints a long startup banner ending with a line similar to:
+
+```
+{"message":"started","service":{"node":{"name":"es-master"}}, ... }
+```
+
+Press `Ctrl+C` to detach. The container keeps running — you only stop watching the logs.
+
+If you see `ERROR: [1] bootstrap checks failed` with `max virtual memory areas vm.max_map_count [65530] is too low`, raise the host limit and restart:
 
 ```bash
-echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main" | \
-  sudo tee /etc/apt/sources.list.d/elastic-8.x.list
+sudo sysctl -w vm.max_map_count=262144
+docker compose restart
 ```
 
-Update the package index so APT sees the new repo:
+Then re-run the verification in Step 8.
+
+## Step 8: Verify es-master is responding on port 9200
 
 ```bash
-sudo apt update
+curl -s http://localhost:9200
 ```
 
-## Step 11: Install Elasticsearch
+Expected response:
+
+```json
+{
+  "name" : "es-master",
+  "cluster_name" : "docker-test-cluster",
+  "cluster_uuid" : "...",
+  "version" : {
+    "number" : "8.13.4",
+    ...
+  },
+  "tagline" : "You Know, for Search"
+}
+```
+
+The `name` field matches the container name. `cluster_name` reads `docker-test-cluster` because each container is currently in `single-node` discovery mode.
+
+## Step 9: Verify es-data-1
 
 ```bash
-sudo apt install -y elasticsearch
+curl -s http://localhost:9201
 ```
 
-The installer prints a security auto-configuration block with a generated password and enrollment token. **Copy and save this output** — it contains the superuser password. For this lab series we will disable security in Lab 50 to keep the cluster setup simple.
+Expected response has `"name" : "es-data-1"` and `"cluster_name" : "docker-test-cluster"`. The two data nodes are still in separate single-node clusters — the next lab wires them together.
 
-Verify the package installed correctly:
+## Step 10: Verify es-data-2
 
 ```bash
-dpkg -l elasticsearch
+curl -s http://localhost:9202
 ```
 
-Expected output (version may differ):
+Expected response has `"name" : "es-data-2"`.
 
-```
-ii  elasticsearch  8.17.x  amd64  Distributed RESTful search engine built for the cloud
-```
+## Step 11: Expose the master API in the Load Balancer
 
-Check that the configuration directory exists:
+Open the **Load Balancer** modal in the lab UI. Run this command to find the host IP:
 
 ```bash
-ls /etc/elasticsearch/
+hostname -I
 ```
 
-Expected files:
+Use the first IP printed as `LB_IP`. Open the Load Balancer modal.
 
-```
-elasticsearch.yml  jvm.options  jvm.options.d  log4j2.properties  role_mapping.yml  roles.yml  users  users_roles
-```
+| Enter IP   | Enter Port |
+|------------|------------|
+| `LB_IP`    | `9200` (es-master HTTP API) |
 
-**Do not start Elasticsearch yet.** Lab 50 edits `elasticsearch.yml` first.
+Click **Expose**. Copy the generated `.lb.poridhi.io` URL — the rest of the lab uses it as `<ES-LB-URL>`.
 
-## Step 12: Exit the first node
+Test from another terminal:
 
 ```bash
-exit
+curl -s <ES-LB-URL>
 ```
 
-## Step 13: Install Java and Elasticsearch on es-data-1
+The same JSON from Step 8 should appear — the lab host is reachable from outside through the load balancer.
 
-SSH into the second instance:
-
-```bash
-ssh -i es-cluster-key.pem ubuntu@$IP_DATA1
-```
-
-Run the same installation steps (8–11) as a single block:
+## Step 12: Confirm all three nodes respond
 
 ```bash
-sudo apt update && sudo apt upgrade -y
-
-sudo apt install -y openjdk-17-jdk
-
-wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | \
-  sudo gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg
-
-echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main" | \
-  sudo tee /etc/apt/sources.list.d/elastic-8.x.list
-
-sudo apt update
-
-sudo apt install -y elasticsearch
-```
-
-Verify:
-
-```bash
-java -version
-dpkg -l elasticsearch
-```
-
-Exit:
-
-```bash
-exit
-```
-
-## Step 14: Install Java and Elasticsearch on es-data-2
-
-SSH into the third instance:
-
-```bash
-ssh -i es-cluster-key.pem ubuntu@$IP_DATA2
-```
-
-Run the identical installation block:
-
-```bash
-sudo apt update && sudo apt upgrade -y
-
-sudo apt install -y openjdk-17-jdk
-
-wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | \
-  sudo gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg
-
-echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main" | \
-  sudo tee /etc/apt/sources.list.d/elastic-8.x.list
-
-sudo apt update
-
-sudo apt install -y elasticsearch
-```
-
-Verify:
-
-```bash
-java -version
-dpkg -l elasticsearch
-```
-
-Exit:
-
-```bash
-exit
-```
-
-## Step 15: Verify all three nodes
-
-Run a quick remote check from your local machine to confirm every node has both Java and Elasticsearch:
-
-```bash
-for IP in $IP_MASTER $IP_DATA1 $IP_DATA2; do
-  echo "--- $IP ---"
-  ssh -i es-cluster-key.pem -o StrictHostKeyChecking=no ubuntu@$IP \
-    "java -version 2>&1 | head -1 && dpkg -l elasticsearch | grep elasticsearch"
+for port in 9200 9201 9202; do
+  echo "--- localhost:$port ---"
+  curl -s "http://localhost:$port" | python3 -c "import sys,json; d=json.load(sys.stdin); print(f\"name={d['name']} cluster={d['cluster_name']}\")"
   echo ""
 done
 ```
 
-Expected output for each node:
+Expected output:
 
 ```
---- 54.210.11.22 ---
-openjdk version "17.0.x" 2024-xx-xx
-ii  elasticsearch  8.17.x  amd64  Distributed RESTful search engine built for the cloud
+--- localhost:9200 ---
+name=es-master cluster=docker-test-cluster
 
---- 54.210.33.44 ---
-openjdk version "17.0.x" 2024-xx-xx
-ii  elasticsearch  8.17.x  amd64  Distributed RESTful search engine built for the cloud
+--- localhost:9201 ---
+name=es-data-1 cluster=docker-test-cluster
 
---- 54.210.55.66 ---
-openjdk version "17.0.x" 2024-xx-xx
-ii  elasticsearch  8.17.x  amd64  Distributed RESTful search engine built for the cloud
+--- localhost:9202 ---
+name=es-data-2 cluster=docker-test-cluster
 ```
 
-All three nodes now have Java 17 and Elasticsearch 8.x installed. The Elasticsearch service is stopped on all nodes — configuration happens next.
+All three nodes boot independently. Each lives in its own `docker-test-cluster` single-node cluster because `discovery.type=single-node` is still in effect.
+
+## Step 13: Stop the stack
+
+```bash
+docker compose down
+```
+
+The containers are stopped and removed, but the named volumes (`es_master_data`, `es_data1_data`, `es_data2_data`) are kept so the data persists across lab restarts.
+
+Confirm the containers are gone:
+
+```bash
+docker compose ps
+```
+
+Expected output:
+
+```
+NAME      IMAGE     COMMAND   SERVICE   CREATED   STATUS    PORTS
+```
+
+All three lines are empty. The host is clean.
+
+## Step 14: Confirm the volumes still exist
+
+```bash
+docker volume ls | grep -E 'es_(master|data[12])'
+```
+
+Expected output:
+
+```
+local     es_master_data
+local     es_data1_data
+local     es_data2_data
+```
+
+These volumes survive `docker compose down` and `docker compose up` — they are how the cluster keeps its indices across restarts.
 
 ## Next Steps
 
-Lab 50 configures `elasticsearch.yml` on each node to assign distinct roles (master, data, ingest), set the cluster name, configure discovery, and form the three nodes into a single running cluster.
+The next lab changes `docker-compose.yml` to a multi-node setup: a single shared `cluster.name`, distinct `node.roles` per container, and a discovery list using service names so the three containers form one Elasticsearch cluster.
