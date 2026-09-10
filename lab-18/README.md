@@ -122,6 +122,8 @@ EOF
 ls
 ```
 
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/lab-18/images/Ls_Output.png)
+
 ## Step 7: Start the Flask server
 
 ```bash
