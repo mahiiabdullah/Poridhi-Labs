@@ -202,8 +202,8 @@ docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
 Three containers run: `lab21-rabbitmq`, `lab21-web`, `lab21-celery`.
 
-![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-21/images/Step%207%20Start%20the%20app%20stack%20(2).png)
 ![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-21/images/Step%207%20Start%20the%20app%20stack%20(1).png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-21/images/Step%207%20Start%20the%20app%20stack%20(2).png)
 
 ## Step 8: Expose ports in the lab UI
 
@@ -249,7 +249,8 @@ docker compose logs -f celery
 
 Press `Ctrl+C` to detach.
 
-![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-21/images/Step%2011%20docker%20compose%20down.png)
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-21/images/Step%2010%20Watch%20the%20worker.png)
+
 
 ## Step 11: Prove broker independence
 
@@ -258,6 +259,8 @@ Stop the app stack:
 ```bash
 docker compose down
 ```
+
+![](https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-61/lab-21/images/Step%2011%20docker%20compose%20down.png)
 
 Check the broker is still up:
 
