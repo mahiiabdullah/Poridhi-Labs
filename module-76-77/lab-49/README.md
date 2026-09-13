@@ -13,7 +13,7 @@ This lab provisions three Elasticsearch nodes on the Poridhi lab host using Dock
 | Term                | Description                                                                                            |
 |---------------------|--------------------------------------------------------------------------------------------------------|
 | Docker Compose      | A tool for defining and running multi-container applications using a single declarative YAML file.     |
-| Docker Network      | A virtual bridge network that lets containers resolve each other by service name without hard-coded IPs. |
+| Docker Network      | A virtual bridge network that lets containers resolve each other by service name without hard-coded IPs.|
 | Named Volume        | A persistent storage volume managed by Docker, identified by name, that survives container restarts.   |
 | Elasticsearch       | A distributed search and analytics engine that stores data across a cluster of nodes.                 |
 | Container           | A lightweight, isolated process that runs an application on top of the host OS kernel.                |
