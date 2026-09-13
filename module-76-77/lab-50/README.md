@@ -4,9 +4,15 @@
 
 This lab wires the three Elasticsearch containers provisioned earlier into a single cluster. Each container receives a distinct role — master, data, or data+ingest — and the cluster forms automatically through service-name discovery on the Docker bridge network.
 
+> **Poridhi sandbox notes**
+>
+> - This lab runs on the **Poridhi lab host** (Puku terminal). No AWS credentials needed.
+> - `ES_JAVA_OPTS` is set to **`-Xms256m -Xmx256m`** (overridden from upstream's 512m) so the three-node cluster fits on the lab host's limited RAM. Keep this — bumping back to 512m crashes one of the data nodes.
+> - If you re-create the cluster with `docker compose down -v`, the named volumes `lab-49_es_master_data` and friends disappear. To reset without losing them, run `docker compose down` only.
+
 ## Architecture
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-76-77/lab-50/images/architecture.png" alt="Lab 50 Architecture"></p>
+<p align="center"><img src="./images/architecture.png" alt="Lab 50 Architecture"></p>
 
 ## Concept
 
@@ -55,7 +61,9 @@ Use a fresh directory so this lab keeps its own compose file and config without 
 
 ## Step 2: Write the multi-node docker-compose file
 
-Create `docker-compose.yml`:
+Write the full compose file in one heredoc. Paste the block as-is — the `'EOF'` delimiter is quoted so `$variables` inside the YAML are not expanded, and a blank line right before `EOF` is required so the heredoc body ends cleanly.
+
+If the heredoc gets mangled by your terminal (long pastes sometimes drop a trailing line), run `wc -l docker-compose.yml` afterwards and confirm the number matches the heredoc body length. A wrong count usually means a line was dropped and the YAML will fail to parse.
 
 ```bash
 cat > docker-compose.yml << 'EOF'
@@ -72,7 +80,7 @@ services:
       - network.host=0.0.0.0
       - http.port=9200
       - transport.port=9300
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
       - xpack.security.enabled=false
       - xpack.security.enrollment.enabled=false
       - xpack.security.http.ssl.enabled=false
@@ -104,7 +112,7 @@ services:
       - network.host=0.0.0.0
       - http.port=9200
       - transport.port=9300
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
       - xpack.security.enabled=false
       - xpack.security.enrollment.enabled=false
       - xpack.security.http.ssl.enabled=false
@@ -136,7 +144,7 @@ services:
       - network.host=0.0.0.0
       - http.port=9200
       - transport.port=9300
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
       - xpack.security.enabled=false
       - xpack.security.enrollment.enabled=false
       - xpack.security.http.ssl.enabled=false

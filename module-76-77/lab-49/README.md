@@ -4,9 +4,16 @@
 
 This lab provisions three Elasticsearch nodes on the Poridhi lab host using Docker Compose. Each node runs in its own container on a shared bridge network so they can discover each other by service name. By the end you have three Elasticsearch containers ready to be wired into a cluster in the next lab.
 
+> **Poridhi sandbox notes**
+>
+> - This lab runs on the **Poridhi lab host** (Puku terminal), not on AWS. You do **not** need the AWS Policy credentials for Labs 49–51.
+> - The Poridhi host has limited RAM. The upstream lab defaults `ES_JAVA_OPTS` to `-Xms512m -Xmx512m` (≈1.5 GB across three containers), which is tight on the lab host. This lab overrides it to **`-Xms256m -Xmx256m`** so all three nodes fit comfortably.
+> - Open the **Load Balancer** modal in Step 11 to expose the master API outside the lab host (the rest of the lab uses the generated `<ES-LB-URL>`).
+> - If `vm.max_map_count` is too low (default 65530), Elasticsearch refuses to start with `bootstrap checks failed`. Step 7 has the one-line fix.
+
 ## Architecture
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-76-77/lab-49/images/architecture.png" alt="Lab 49 Architecture"></p>
+<p align="center"><img src="./images/architecture.png" alt="Lab 49 Architecture"></p>
 
 ## Concept
 
@@ -42,8 +49,9 @@ Each service binds port 9200 and 9300 on the host. This lab only starts the cont
 docker --version
 docker compose version
 ```
+
 - You can reach the Puku CLI terminal on the lab host.
-- About 2 GB of free RAM for three Elasticsearch containers (each defaults to 1 GB heap).
+- About 1 GB of free RAM for three Elasticsearch containers (each pinned to 256 MB heap in this lab).
 
 ## Step 1: Create the project directory
 
@@ -66,7 +74,7 @@ services:
     container_name: es-master
     environment:
       - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
       - xpack.security.enabled=false
     ulimits:
       memlock:
@@ -83,7 +91,7 @@ services:
     container_name: es-data-1
     environment:
       - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
       - xpack.security.enabled=false
     ulimits:
       memlock:
@@ -100,7 +108,7 @@ services:
     container_name: es-data-2
     environment:
       - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
       - xpack.security.enabled=false
     ulimits:
       memlock:
@@ -126,7 +134,9 @@ EOF
 
 Each container uses `discovery.type=single-node` for now — this lets it boot in isolation. The next lab switches the cluster to multi-node configuration with a shared `cluster.name`.
 
-`ES_JAVA_OPTS=-Xms512m -Xmx512m` keeps the JVM heap small (512 MB) so three containers can run comfortably on the lab host.
+`ES_JAVA_OPTS=-Xms256m -Xmx256m` keeps the JVM heap small (256 MB) so three containers can run comfortably on the Poridhi lab host. Bumping this back to 512 MB is fine on hosts with more RAM.
+
+If the heredoc gets mangled by your terminal (long pastes sometimes drop a trailing line), run `wc -l docker-compose.yml` afterwards and confirm the number matches the heredoc body length. A wrong count usually means a line was dropped and the YAML will fail to parse.
 
 ## Step 3: Pull the Elasticsearch image
 
@@ -320,4 +330,4 @@ These volumes survive `docker compose down` and `docker compose up` — they are
 
 ## Next Steps
 
-The next lab changes `docker-compose.yml` to a multi-node setup: a single shared `cluster.name`, distinct `node.roles` per container, and a discovery list using service names so the three containers form one Elasticsearch cluster.
+In the next lab we will changes `docker-compose.yml` to a multi-node setup: a single shared `cluster.name`, distinct `node.roles` per container, and a discovery list using service names so the three containers form one Elasticsearch cluster.
