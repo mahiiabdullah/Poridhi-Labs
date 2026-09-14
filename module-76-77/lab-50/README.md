@@ -2,13 +2,7 @@
 
 **Module 76 — Elasticsearch Cluster Setup**
 
-This lab wires the three Elasticsearch containers provisioned earlier into a single cluster. Each container receives a distinct role — master, data, or data+ingest — and the cluster forms automatically through service-name discovery on the Docker bridge network.
-
-> **Poridhi sandbox notes**
->
-> - This lab runs on the **Poridhi lab host** (Puku terminal). No AWS credentials needed.
-> - `ES_JAVA_OPTS` is set to **`-Xms256m -Xmx256m`** (overridden from upstream's 512m) so the three-node cluster fits on the lab host's limited RAM. Keep this — bumping back to 512m crashes one of the data nodes.
-> - If you re-create the cluster with `docker compose down -v`, the named volumes `lab-49_es_master_data` and friends disappear. To reset without losing them, run `docker compose down` only.
+This lab wires the three EC2 instances from lab-49 into a single Elasticsearch cluster. Each instance already has Elasticsearch 8.x installed by the user-data script from lab-49; this lab only edits `/etc/elasticsearch/elasticsearch.yml` on each node so they share a `cluster.name`, declare distinct `node.roles`, and discover each other by their private IPs. By the end you have one green cluster with one master-eligible node and two data nodes.
 
 ## Architecture
 
@@ -16,253 +10,351 @@ This lab wires the three Elasticsearch containers provisioned earlier into a sin
 
 ## Concept
 
-| Term                      | Description                                                                                                     |
-|---------------------------|-----------------------------------------------------------------------------------------------------------------|
-| `cluster.name`            | A string that all nodes must share to form the same cluster. Nodes with different cluster names ignore each other. |
-| `node.name`               | A human-readable identifier for a single node, visible in the cluster state and logs.                            |
-| `node.roles`              | A list that controls what a node does. Common roles: `master`, `data`, `ingest`.                                 |
-| Master-eligible node      | A node with the `master` role. It can be elected to manage cluster state, index metadata, and shard allocation.  |
-| Data node                 | A node with the `data` role. It stores index shards and runs search and indexing operations.                     |
-| Ingest node               | A node with the `ingest` role. It runs ingest pipelines to transform documents before indexing.                  |
-| Unicast discovery         | A cluster-forming mode where each node contacts a list of seed hosts (here, Docker service names) instead of multicasting. |
-| `cluster.initial_master_nodes` | A one-time bootstrap list of master-eligible node names. Used only on the very first cluster start.        |
-| `xpack.security.enabled`  | Toggles TLS and authentication. Disabled in this lab to focus on cluster formation.                              |
+| Term                          | Description                                                                                            |
+|-------------------------------|--------------------------------------------------------------------------------------------------------|
+| `cluster.name`                | A string all nodes must share to form the same cluster. Nodes with different cluster names ignore each other. |
+| `node.name`                   | A human-readable identifier for a single node, visible in the cluster state and logs.                  |
+| `node.roles`                  | A list that controls what a node does. Common roles: `master`, `data`, `ingest`.                       |
+| Master-eligible node          | A node with the `master` role. It can be elected to manage cluster state, index metadata, and shard allocation. |
+| Data node                     | A node with the `data` role. It stores index shards and runs search and indexing operations.           |
+| Ingest node                   | A node with the `ingest` role. It runs ingest pipelines to transform documents before indexing.        |
+| `discovery.seed_hosts`        | A list of host addresses the node contacts to discover other cluster members. Use private IPs in EC2. |
+| `cluster.initial_master_nodes`| A one-time bootstrap list of master-eligible node names. Used only on the very first cluster start.    |
+| `GET /_cluster/health`        | The API endpoint that reports cluster status — `green`/`yellow`/`red`, master node, and shard counts.   |
 
-On the Poridhi lab host the three containers share a single bridge network (`lab49_net`). Service names (`es-master`, `es-data-1`, `es-data-2`) act as the discovery addresses — there are no real private IPs to wire into `elasticsearch.yml`.
+Elasticsearch discovers peers via `discovery.seed_hosts`. On EC2 we use private IPs (for example `10.0.1.10`, `10.0.1.11`, `10.0.1.12`) because every instance lives in the same VPC and the security group opens 9200 and 9300 to the VPC CIDR. Lab-49 provisioned these instances and the security group; you do not need to recreate them.
 
-## What You Will Build
+## What You Will Configure
 
-A three-node Elasticsearch cluster named `poridhi-es-cluster` with the following role assignment:
+A single Elasticsearch cluster named `docker-cluster` — chosen because that is the value shipped with `elasticsearch.yml` on each node from lab-49's user-data, so we only need to **edit** the file on each instance instead of rebuilding from scratch. Each instance keeps the default `cluster.name` and gains its own `node.name` and `node.roles`:
 
-| Node       | `node.roles`       | Purpose                                    |
-|------------|--------------------|--------------------------------------------|
-| es-master  | `[master]`         | Dedicated cluster manager — no data stored |
-| es-data-1  | `[data]`           | Stores index shards, runs queries          |
-| es-data-2  | `[data, ingest]`   | Stores shards and runs ingest pipelines    |
+| Node           | Private IP (example) | `node.name`     | `node.roles`        | What it does                                       |
+|----------------|----------------------|-----------------|---------------------|----------------------------------------------------|
+| `es-master`    | `10.0.1.10`          | `es-master`     | `[master]`          | Owns cluster state, no data stored                 |
+| `es-data-1`    | `10.0.1.11`          | `es-data-1`     | `[data]`            | Stores index shards, runs queries                  |
+| `es-data-2`    | `10.0.1.12`          | `es-data-2`     | `[data, ingest]`    | Stores shards and runs ingest pipelines            |
 
-After starting the cluster you verify health, inspect node roles, and index a test document.
+After the restart, the three nodes form a 3-node cluster with one master-eligible, two data-eligible, and one ingest-capable node. The cluster reports `green` once the unassigned shards (from the still-allocated shards on the master, which has no `data` role) settle into a steady state.
 
 ## Prerequisites
 
-Complete the previous lab first. You need:
+- **Lab-49 completed**: three `t3.medium` instances running on Ubuntu 24.04 with Elasticsearch 8.x installed by user-data. From your terminal you have the three instance IDs (`es-master.id`, `es-data-1.id`, `es-data-2.id`) and the `instances.txt` file from lab-49.
+- **AWS credentials** in the same shell session as lab-49 (`AWS_REGION` exported, `aws sts get-caller-identity` succeeds).
+- **SSH access to each instance** using `es-lab-key.pem` from lab-49 (kept in `~/lab-49`).
+- **The three instances running** — Step 1 of this lab checks that before editing config.
 
-- The `~/lab-49` directory created earlier.
-- The three Elasticsearch containers stopped (you ran `docker compose down` at the end of the previous lab).
-- The named volumes still present (`es_master_data`, `es_data1_data`, `es_data2_data`).
+> **Cost note.** Three `t3.medium` instances still run while you do this lab (about $0.12/hr). Stop them when finished via `aws ec2 stop-instances --region "$AWS_REGION" --instance-ids "$(cat es-master.id)" "$(cat es-data-1.id)" "$(cat es-data-2.id)"`.
 
-## Step 0: Stop lab-49 and verify its volumes and network survive
+## Step 1: Confirm the three instances are running
 
-Before starting lab-50, stop the lab-49 stack but **do not remove the volumes or the network** — lab-50 attaches them as `external`. Plain `down` only, never `down -v`:
+If you came straight from lab-49 you can skip this. Otherwise, cd back into the lab-49 working directory and verify each instance is `running`:
 
 ```bash
 cd ~/lab-49
-docker compose down
-docker volume ls | grep -E 'lab-49_es_(master|data[12])_data'
-docker network ls | grep lab49_net
+
+for f in es-master.id es-data-1.id es-data-2.id; do
+  INSTANCE_ID=$(cat "$f")
+  STATE=$(aws ec2 describe-instances \
+    --region "$AWS_REGION" \
+    --instance-ids "$INSTANCE_ID" \
+    --query 'Reservations[0].Instances[0].State.Name' \
+    --output text)
+  echo "$INSTANCE_ID -> $STATE"
+done
 ```
 
-Expected output: three volumes (`lab-49_es_master_data`, `lab-49_es_data1_data`, `lab-49_es_data2_data`) and one network (`lab49_net`). If any are missing, the previous lab was torn down with `docker compose down -v` — recreate the lab-49 stack, run `docker compose down` (no `-v`), and come back.
+Expected output:
 
-## Step 1: Create the lab-50 directory
+```
+i-0aaa1111aaaa1111aa -> running
+i-0bbb2222bbbb2222bb -> running
+i-0ccc3333cccc3333cc -> running
+```
+
+If any instance is `stopped`, start it:
 
 ```bash
-mkdir -p ~/lab-50
-cd ~/lab-50
+aws ec2 start-instances \
+  --region "$AWS_REGION" \
+  --instance-ids "$(cat es-master.id)" "$(cat es-data-1.id)" "$(cat es-data-2.id)"
+
+for f in es-master.id es-data-1.id es-data-2.id; do
+  aws ec2 wait instance-running \
+    --region "$AWS_REGION" \
+    --instance-ids "$(cat "$f")"
+done
 ```
 
-Use a fresh directory so this lab keeps its own compose file and config without touching the previous lab.
+## Step 2: Re-collect public IPs and confirm SSH + Elasticsearch on each node
 
-## Step 2: Write the multi-node docker-compose file
-
-Write the full compose file in one heredoc. Paste the block as-is — the `'EOF'` delimiter is quoted so `$variables` inside the YAML are not expanded, and a blank line right before `EOF` is required so the heredoc body ends cleanly.
-
-If the heredoc gets mangled by your terminal (long pastes sometimes drop a trailing line), run `wc -l docker-compose.yml` afterwards and confirm the number matches the heredoc body length. A wrong count usually means a line was dropped and the YAML will fail to parse.
+Lab-49 stored a snapshot of public IPs in `instances.txt`. If the instances were stopped and restarted, AWS assigns new public IPs. Refresh `instances.txt` and confirm you can reach Elasticsearch on every node:
 
 ```bash
-cat > docker-compose.yml << 'EOF'
-services:
-  es-master:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
-    container_name: es-master
-    environment:
-      - cluster.name=poridhi-es-cluster
-      - node.name=es-master
-      - node.roles=[master]
-      - discovery.seed_hosts=es-data-1,es-data-2
-      - cluster.initial_master_nodes=es-master
-      - network.host=0.0.0.0
-      - http.port=9200
-      - transport.port=9300
-      - ES_JAVA_OPTS=-Xms256m -Xmx256m
-      - xpack.security.enabled=false
-      - xpack.security.enrollment.enabled=false
-      - xpack.security.http.ssl.enabled=false
-      - xpack.security.transport.ssl.enabled=false
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    volumes:
-      - es_master_data:/usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q -E '\"status\":\"(green|yellow)\"'"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
-    restart: unless-stopped
+> instances.txt
+for f in es-master.id es-data-1.id es-data-2.id; do
+  INSTANCE_ID=$(cat "$f")
+  PUBLIC_IP=$(aws ec2 describe-instances \
+    --region "$AWS_REGION" \
+    --instance-ids "$INSTANCE_ID" \
+    --query 'Reservations[0].Instances[0].PublicIpAddress' \
+    --output text)
+  echo "$INSTANCE_ID $PUBLIC_IP" >> instances.txt
+done
 
-  es-data-1:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
-    container_name: es-data-1
-    environment:
-      - cluster.name=poridhi-es-cluster
-      - node.name=es-data-1
-      - node.roles=[data]
-      - discovery.seed_hosts=es-master,es-data-2
-      - cluster.initial_master_nodes=es-master
-      - network.host=0.0.0.0
-      - http.port=9200
-      - transport.port=9300
-      - ES_JAVA_OPTS=-Xms256m -Xmx256m
-      - xpack.security.enabled=false
-      - xpack.security.enrollment.enabled=false
-      - xpack.security.http.ssl.enabled=false
-      - xpack.security.transport.ssl.enabled=false
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    volumes:
-      - es_data1_data:/usr/share/elasticsearch/data
-    ports:
-      - "9201:9200"
-      - "9301:9300"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q -E '\"status\":\"(green|yellow)\"'"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
-    restart: unless-stopped
-
-  es-data-2:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
-    container_name: es-data-2
-    environment:
-      - cluster.name=poridhi-es-cluster
-      - node.name=es-data-2
-      - node.roles=[data,ingest]
-      - discovery.seed_hosts=es-master,es-data-1
-      - cluster.initial_master_nodes=es-master
-      - network.host=0.0.0.0
-      - http.port=9200
-      - transport.port=9300
-      - ES_JAVA_OPTS=-Xms256m -Xmx256m
-      - xpack.security.enabled=false
-      - xpack.security.enrollment.enabled=false
-      - xpack.security.http.ssl.enabled=false
-      - xpack.security.transport.ssl.enabled=false
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    volumes:
-      - es_data2_data:/usr/share/elasticsearch/data
-    ports:
-      - "9202:9200"
-      - "9302:9300"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q -E '\"status\":\"(green|yellow)\"'"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
-    restart: unless-stopped
-
-volumes:
-  es_master_data:
-    external: true
-    name: lab-49_es_master_data
-  es_data1_data:
-    external: true
-    name: lab-49_es_data1_data
-  es_data2_data:
-    external: true
-    name: lab-49_es_data2_data
-
-networks:
-  default:
-    name: lab49_net
-    external: true
-EOF
+cat instances.txt
 ```
 
-Key changes from the previous lab:
-
-- `discovery.type=single-node` is removed and replaced with a shared `cluster.name=poridhi-es-cluster` plus `discovery.seed_hosts` pointing at the other two service names.
-- `node.name` and `node.roles` are set per container so the cluster knows which node is master, data, or data+ingest.
-- The three named volumes are re-attached as `external` volumes, so any data already indexed earlier (none yet, but useful for future labs) is preserved.
-- The default network `lab49_net` is declared `external: true` — Docker Compose creates it automatically when the first stack starts, and subsequent stacks can join it by name.
-
-## Step 3: Confirm the compose file is valid
+Pick up the new IPs into shell variables:
 
 ```bash
-docker compose config
+ES_MASTER_IP=$(awk -v id="$(cat es-master.id)" '$1==id{print $2}' instances.txt)
+ES_DATA1_IP=$(awk -v id="$(cat es-data-1.id)" '$1==id{print $2}' instances.txt)
+ES_DATA2_IP=$(awk -v id="$(cat es-data-2.id)" '$1==id{print $2}' instances.txt)
+
+echo "es-master: $ES_MASTER_IP"
+echo "es-data-1: $ES_DATA1_IP"
+echo "es-data-2: $ES_DATA2_IP"
 ```
 
-Expected output: the same YAML is printed back with all variables resolved. No errors.
-
-## Step 4: Start the cluster
+Sanity check the local API from each node:
 
 ```bash
-docker compose up -d
+for ip in "$ES_MASTER_IP" "$ES_DATA1_IP" "$ES_DATA2_IP"; do
+  echo "--- $ip ---"
+  ssh -i es-lab-key.pem -o StrictHostKeyChecking=accept-new \
+    ubuntu@"$ip" \
+    'curl -sf http://localhost:9200 >/dev/null && echo OK || echo NOT READY'
+done
 ```
 
-The three containers start in parallel. The master must be elected before the data nodes can join. Wait about a minute, then check status:
+Expected output: three lines ending in `OK`. If a node prints `NOT READY`, wait for the user-data script to finish (the journalctl tail in lab-49 Step 9 is the quickest diagnostic).
+
+## Step 3: Capture the private IPs
+
+`discovery.seed_hosts` needs addresses the three nodes can reach from inside the VPC. EC2 private IPs are stable across stop/start cycles, so they are the right thing to put in cluster config:
 
 ```bash
-docker compose ps
+> private-ips.txt
+for f in es-master.id es-data-1.id es-data-2.id; do
+  INSTANCE_ID=$(cat "$f")
+  PRIVATE_IP=$(aws ec2 describe-instances \
+    --region "$AWS_REGION" \
+    --instance-ids "$INSTANCE_ID" \
+    --query 'Reservations[0].Instances[0].PrivateIpAddress' \
+    --output text)
+  echo "$INSTANCE_ID $PRIVATE_IP" >> private-ips.txt
+done
+
+cat private-ips.txt
 ```
 
-Expected output (all three `Up` and `(healthy)`):
+Expected output (your IPs will differ):
 
 ```
-NAME        IMAGE                                                 COMMAND                  SERVICE     CREATED         STATUS                    PORTS
-es-master   docker.elastic.co/elasticsearch/elasticsearch:8.13.4  "/bin/tini /usr/local…"   es-master   X seconds ago   Up X seconds (healthy)    0.0.0.0:9200->9200/tcp, 0.0.0.0:9300->9300/tcp
-es-data-1   docker.elastic.co/elasticsearch/elasticsearch:8.13.4  "/bin/tini /usr/local…"   es-data-1   X seconds ago   Up X seconds (healthy)    0.0.0.0:9201->9200/tcp, 0.0.0.0:9301->9300/tcp
-es-data-2   docker.elastic.co/elasticsearch/elasticsearch:8.13.4  "/bin/tini /usr/local…"   es-data-2   X seconds ago   Up X seconds (healthy)    0.0.0.0:9202->9200/tcp, 0.0.0.0:9302->9300/tcp
+i-0aaa1111aaaa1111aa 10.0.1.10
+i-0bbb2222bbbb2222bb 10.0.1.11
+i-0ccc3333cccc3333cc 10.0.1.12
 ```
 
-## Step 5: Tail the master log while the cluster forms
+Pick up the private IPs into shell variables:
 
 ```bash
-docker compose logs -f es-master
+ES_MASTER_PRIVATE=$(awk -v id="$(cat es-master.id)" '$1==id{print $2}' private-ips.txt)
+ES_DATA1_PRIVATE=$(awk -v id="$(cat es-data-1.id)" '$1==id{print $2}' private-ips.txt)
+ES_DATA2_PRIVATE=$(awk -v id="$(cat es-data-2.id)" '$1==id{print $2}' private-ips.txt)
+
+echo "Private IPs:"
+echo "  es-master = $ES_MASTER_PRIVATE"
+echo "  es-data-1 = $ES_DATA1_PRIVATE"
+echo "  es-data-2 = $ES_DATA2_PRIVATE"
 ```
 
-Watch for:
+These three IPs are what you paste into `discovery.seed_hosts` on every node.
 
-```
-{"message":"elected-as-master", ...}
-{"message":"cluster state version changed from ... to ...", ...}
-{"message":"node-left", ...}
-```
+## Step 4: Write the per-instance elasticsearch.yml
 
-The cluster boots first as a single master, then the data nodes join. Press `Ctrl+C` once you see `cluster state version changed` lines for all three nodes.
-
-## Step 6: Check cluster health
-
-From the host, query the cluster health endpoint on the master:
+Three files, one per role. Save them on your local machine first so you can `scp` them up in Step 5:
 
 ```bash
-curl -s http://localhost:9200/_cluster/health?pretty
+mkdir -p ~/lab-50 && cd ~/lab-50
+
+cat > es-master.yml <<'YML'
+cluster.name: docker-cluster
+node.name: es-master
+node.roles: [master]
+network.host: 0.0.0.0
+http.port: 9200
+discovery.seed_hosts:
+  - ES_DATA1_PRIVATE
+  - ES_DATA2_PRIVATE
+cluster.initial_master_nodes:
+  - es-master
+YML
+
+cat > es-data-1.yml <<'YML'
+cluster.name: docker-cluster
+node.name: es-data-1
+node.roles: [data]
+network.host: 0.0.0.0
+http.port: 9200
+discovery.seed_hosts:
+  - ES_MASTER_PRIVATE
+  - ES_DATA2_PRIVATE
+YML
+
+cat > es-data-2.yml <<'YML'
+cluster.name: docker-cluster
+node.name: es-data-2
+node.roles: [data, ingest]
+network.host: 0.0.0.0
+http.port: 9200
+discovery.seed_hosts:
+  - ES_MASTER_PRIVATE
+  - ES_DATA1_PRIVATE
+YML
 ```
 
-Expected response:
+Replace the four `*_PRIVATE` placeholders with the actual addresses captured in Step 3. Use `sed` so the YAML quoting does not have to change:
+
+```bash
+sed -i \
+  -e "s/ES_MASTER_PRIVATE/$ES_MASTER_PRIVATE/g" \
+  -e "s/ES_DATA1_PRIVATE/$ES_DATA1_PRIVATE/g" \
+  -e "s/ES_DATA2_PRIVATE/$ES_DATA2_PRIVATE/g" \
+  es-master.yml es-data-1.yml es-data-2.yml
+```
+
+Quick sanity check — each file should now show the actual IPs:
+
+```bash
+grep -h 'discovery.seed_hosts:' -A3 es-master.yml es-data-1.yml es-data-2.yml
+```
+
+> Note on `cluster.name`: lab-49's user-data script leaves `cluster.name: elasticsearch` (the Elasticsearch default). This lab changes it to `docker-cluster` everywhere so the three nodes agree on the same cluster name. The name string is arbitrary — pick anything consistent across all three nodes.
+
+## Step 5: Copy each config to its instance
+
+Push the per-role YAML into place on the matching instance. The Ubuntu AMI ships with `sudo` and passwordless sudo for the `ubuntu` user, so the next ssh call uses `sudo tee` to write into `/etc/elasticsearch/`:
+
+```bash
+scp -i ~/lab-49/es-lab-key.pem -o StrictHostKeyChecking=accept-new \
+  es-master.yml ubuntu@"$ES_MASTER_IP":/tmp/elasticsearch.yml
+
+ssh -i ~/lab-49/es-lab-key.pem -o StrictHostKeyChecking=accept-new \
+  ubuntu@"$ES_MASTER_IP" \
+  'sudo cp /etc/elasticsearch/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml.bak \
+    && sudo tee /etc/elasticsearch/elasticsearch.yml >/dev/null < /tmp/elasticsearch.yml \
+    && sudo chown root:elasticsearch /etc/elasticsearch/elasticsearch.yml \
+    && sudo chmod 660 /etc/elasticsearch/elasticsearch.yml'
+```
+
+Repeat for `es-data-1.yml` → `es-data-1` and `es-data-2.yml` → `es-data-2`. A small loop keeps the command count down:
+
+```bash
+for pair in "es-data-1:$ES_DATA1_IP" "es-data-2:$ES_DATA2_IP"; do
+  NAME="${pair%%:*}"
+  IP="${pair##*:}"
+  scp -i ~/lab-49/es-lab-key.pem -o StrictHostKeyChecking=accept-new \
+    "$NAME.yml" ubuntu@"$IP":/tmp/elasticsearch.yml
+
+  ssh -i ~/lab-49/es-lab-key.pem -o StrictHostKeyChecking=accept-new \
+    ubuntu@"$IP" \
+    'sudo cp /etc/elasticsearch/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml.bak
+     sudo tee /etc/elasticsearch/elasticsearch.yml >/dev/null < /tmp/elasticsearch.yml
+     sudo chown root:elasticsearch /etc/elasticsearch/elasticsearch.yml
+     sudo chmod 660 /etc/elasticsearch/elasticsearch.yml'
+done
+```
+
+Verify each node sees its expected `node.name` and `node.roles` before restarting:
+
+```bash
+for pair in "es-master:$ES_MASTER_IP" "es-data-1:$ES_DATA1_IP" "es-data-2:$ES_DATA2_IP"; do
+  NAME="${pair%%:*}"
+  IP="${pair##*:}"
+  echo "--- $NAME ($IP) ---"
+  ssh -i ~/lab-49/es-lab-key.pem ubuntu@"$IP" \
+    'sudo grep -E "^(cluster.name|node.name|node.roles|discovery.seed_hosts)" /etc/elasticsearch/elasticsearch.yml'
+done
+```
+
+Expected output:
+
+```
+--- es-master (...)
+cluster.name: docker-cluster
+node.name: es-master
+node.roles: [master]
+discovery.seed_hosts:
+  - <es-data-1 private>
+  - <es-data-2 private>
+--- es-data-1 (...)
+cluster.name: docker-cluster
+node.name: es-data-1
+node.roles: [data]
+discovery.seed_hosts:
+  - <es-master private>
+  - <es-data-2 private>
+--- es-data-2 (...)
+cluster.name: docker-cluster
+node.name: es-data-2
+node.roles: [data, ingest]
+discovery.seed_hosts:
+  - <es-master private>
+  - <es-data-1 private>
+```
+
+## Step 6: Restart Elasticsearch on every node
+
+Each instance runs Elasticsearch as a systemd service (lab-49's user-data enabled it). Restart them in any order — the cluster forms when enough master-eligible nodes are reachable:
+
+```bash
+for pair in "es-master:$ES_MASTER_IP" "es-data-1:$ES_DATA1_IP" "es-data-2:$ES_DATA2_IP"; do
+  NAME="${pair%%:*}"
+  IP="${pair##*:}"
+  echo "Restarting $NAME..."
+  ssh -i ~/lab-49/es-lab-key.pem ubuntu@"$IP" \
+    'sudo systemctl restart elasticsearch.service'
+done
+```
+
+Wait for Elasticsearch to come back up on each node. The service takes 15–30 seconds to rejoin a cluster from cold start:
+
+```bash
+for pair in "es-master:$ES_MASTER_IP" "es-data-1:$ES_DATA1_IP" "es-data-2:$ES_DATA2_IP"; do
+  NAME="${pair%%:*}"
+  IP="${pair##*:}"
+  echo "--- waiting for $NAME ---"
+  ssh -i ~/lab-49/es-lab-key.pem ubuntu@"$IP" \
+    'for i in $(seq 1 30); do
+       if curl -sf http://localhost:9200 >/dev/null 2>&1; then
+         echo "  up after ${i} attempts"
+         exit 0
+       fi
+       sleep 3
+     done
+     echo "  did not come up in time"
+     sudo journalctl -u elasticsearch --no-pager -n 80
+     exit 1'
+done
+```
+
+Expected output: three lines ending in `up after N attempts`.
+
+## Step 7: Check cluster health from the master
+
+`GET /_cluster/health` reports the cluster's status, the elected master, and the shard counts. Run it from the master so you can act on the result immediately:
+
+```bash
+ssh -i ~/lab-49/es-lab-key.pem ubuntu@"$ES_MASTER_IP" \
+  'curl -s http://localhost:9200/_cluster/health?pretty'
+```
+
+Expected output:
 
 ```json
 {
-  "cluster_name" : "poridhi-es-cluster",
+  "cluster_name" : "docker-cluster",
   "status" : "green",
   "timed_out" : false,
   "number_of_nodes" : 3,
@@ -275,362 +367,275 @@ Expected response:
   "delayed_unassigned_shards" : 0,
   "number_of_pending_tasks" : 0,
   "number_of_in_flight_fetch" : 0,
-  "task_max_waiting_in_queue_millis" : 0,
+  "task_max_waiting_in_millis" : 0,
   "active_shards_percent_as_number" : 100.0
 }
 ```
 
-Key values to confirm:
+What each line tells you:
 
-| Field                 | Expected | Meaning                                                   |
-|-----------------------|----------|-----------------------------------------------------------|
-| `status`              | `green`  | All primary and replica shards are allocated.              |
-| `number_of_nodes`     | `3`      | All three nodes joined the cluster.                        |
-| `number_of_data_nodes`| `2`      | Two nodes have the `data` role (es-data-1 and es-data-2). |
+- `cluster_name: docker-cluster` — all three nodes agree on the name, so they joined the same cluster.
+- `status: green` — every shard is allocated. `yellow` would mean indices with unassigned replicas; `red` means primary shards are missing.
+- `number_of_nodes: 3` — all three instances are members.
+- `number_of_data_nodes: 2` — `es-data-1` and `es-data-2` carry the `data` role; `es-master` does not, by design.
+- `active_shards_percent_as_number: 100.0` — no shards are stuck waiting for assignment.
 
-If `status` is `yellow`, one or more replica shards are unassigned — usually because a node has not finished joining. Wait 30 seconds and retry. If `number_of_nodes` is less than 3, a node failed to discover the cluster — inspect its logs:
+If `status` is `yellow` or `red`, jump to Step 9 for the diagnostic flow before re-checking.
 
-```bash
-docker compose logs es-data-1 | tail -50
-```
+## Step 8: List the cluster members
 
-## Step 7: List the cluster nodes
+`GET /_cat/nodes` returns one row per node with its name, role set, and which node holds the master title:
 
 ```bash
-curl -s http://localhost:9200/_cat/nodes?v
+ssh -i ~/lab-49/es-lab-key.pem ubuntu@"$ES_MASTER_IP" \
+  'curl -s "http://localhost:9200/_cat/nodes?v&pretty"'
 ```
 
 Expected output:
 
 ```
-ip         heap.percent ram.percent cpu load_1m load_5m load_15m node.role master name
-10.0.1.2            25          60   2    0.10    0.08     0.05 m         *      es-master
-10.0.1.3            30          55   3    0.12    0.09     0.06 d         -      es-data-1
-10.0.1.4            28          58   2    0.11    0.08     0.05 di        -      es-data-2
+ip          heap.percent ram.percent cpu load_1m load_5m load_15m node.role node.name    cluster.name
+10.0.1.10            18          72   2    0.06    0.07     0.05 m         es-master    docker-cluster
+10.0.1.11            22          74   3    0.05    0.08     0.04 d         es-data-1    docker-cluster
+10.0.1.12            21          73   2    0.04    0.06     0.03 di        es-data-2    docker-cluster
 ```
 
-The IP addresses shown are Docker bridge addresses (they will differ from the sample). The `node.role` column encodes the roles:
+Read the columns:
 
-| Code | Role      |
-|------|-----------|
-| `m`  | master    |
-| `d`  | data      |
-| `i`  | ingest    |
-
-`es-master` shows `m` (master-eligible) and the `*` in the `master` column confirms it won the election. `es-data-1` shows `d` (data only). `es-data-2` shows `di` (data + ingest).
-
-## Step 8: Verify the elected master
+- `node.role` is a one-letter code per role: `m` = master, `d` = data, `i` = ingest. `es-data-2` shows `di` because it has both `data` and `ingest`.
+- `cluster.name` matches across all three rows, confirming a single cluster.
+- A `*` marker in the raw `_cat/nodes` API indicates which node is the elected master. The `master` column appears when you pass `?h=ip,node.role,node.name,master`:
 
 ```bash
-curl -s http://localhost:9200/_cat/master?v
+ssh -i ~/lab-49/es-lab-key.pem ubuntu@"$ES_MASTER_IP" \
+  'curl -s "http://localhost:9200/_cat/nodes?h=ip,node.role,node.name,master&pretty"'
 ```
 
-Expected output:
+Expected output (one row has `-` for master, the elected master has `*`):
 
 ```
-id                     host       ip         node
-abc123...              10.0.1.2  10.0.1.2   es-master
+ip          node.role node.name    master
+10.0.1.10   m         es-master    *
+10.0.1.11   d         es-data-1    -
+10.0.1.12   di        es-data-2    -
 ```
 
-The elected master is `es-master`. Since it is the only master-eligible node in this lab, it is always the elected master.
+Because only one node (`es-master`) is master-eligible, it always wins the election. Adding more `master`-role nodes introduces a quorum — covered in a later lab.
 
-## Step 9: Expose the master API in the Load Balancer
+## Step 9: Troubleshooting
 
-Open the **Load Balancer** modal in the lab UI. Run this to find the host IP:
+If `GET /_cluster/health` reports `yellow` or `red`, or `number_of_nodes` is less than 3, work through these checks.
+
+### Check 1 — the three nodes can reach each other on 9300
 
 ```bash
-hostname -I
+ssh -i ~/lab-49/es-lab-key.pem ubuntu@"$ES_MASTER_IP" \
+  "for ip in $ES_DATA1_PRIVATE $ES_DATA2_PRIVATE; do
+     echo -n \"\$ip:9300 \"
+     timeout 3 bash -c \"</dev/tcp/\$ip/9300\" 2>&1 && echo OK || echo FAIL
+   done"
 ```
 
-Use the first IP printed as `LB_IP`.
+Expected output: both lines end with `OK`. `FAIL` means the security group is missing the 9300 rule on the VPC CIDR — go back to lab-49 Step 4 and add it.
 
-| Enter IP   | Enter Port |
-|------------|------------|
-| `LB_IP`    | `9200` (es-master HTTP API) |
-
-Click **Expose**. Copy the generated `.lb.poridhi.io` URL — the rest of the lab uses it as `<ES-LB-URL>`.
-
-Verify from another terminal:
+### Check 2 — the cluster logs show discovery / election errors
 
 ```bash
-curl -s <ES-LB-URL>/_cluster/health?pretty
+ssh -i ~/lab-49/es-lab-key.pem ubuntu@"$ES_MASTER_IP" \
+  'sudo journalctl -u elasticsearch --no-pager -n 200 | grep -E "master|discovery|seed" | tail -40'
 ```
 
-The same JSON from Step 6 should appear, confirming the cluster is reachable from outside the lab host.
+Common lines to look for:
 
-## Step 10: Index a test document
+- `master not discovered or elected yet, an election requires one or more nodes with the master role` — at least one node's `node.roles` does not contain `master`. Re-check Step 5.
+- `failed to send join request to master ... connection refused` — network reachability on 9300 between nodes (Check 1).
+- `cluster.name ... does not match local cluster.name` — one node's `cluster.name` differs from the others. Diff the three YAML files.
 
-Write a document to a new index to confirm the data path works end-to-end:
+### Check 3 — config drift
+
+Diff the active config across all three nodes. Each row should report the same `cluster.name` and the role-appropriate `node.roles`:
 
 ```bash
-curl -s -X POST http://localhost:9200/test-index/_doc/1 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Cluster provisioning complete",
-    "module": 76,
-    "lab": 50,
-    "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
-  }' | python3 -m json.tool
-```
-
-Expected response:
-
-```json
-{
-    "_index": "test-index",
-    "_id": "1",
-    "_version": 1,
-    "result": "created",
-    "_shards": {
-        "total": 2,
-        "successful": 2,
-        "failed": 0
-    },
-    "_seq_no": 0,
-    "_primary_term": 1
-}
-```
-
-`"successful": 2` means the primary shard and one replica were both written. The document is now stored across the two data nodes.
-
-## Step 11: Read the document back
-
-```bash
-curl -s http://localhost:9200/test-index/_doc/1?pretty
-```
-
-Expected response:
-
-```json
-{
-  "_index" : "test-index",
-  "_id" : "1",
-  "_version" : 1,
-  "_seq_no" : 0,
-  "_primary_term" : 1,
-  "found" : true,
-  "_source" : {
-    "title" : "Cluster provisioning complete",
-    "module" : 76,
-    "lab" : 50,
-    "timestamp" : "2026-09-05T14:30:00Z"
-  }
-}
-```
-
-## Step 12: Verify shard allocation
-
-Check which data nodes hold the shards for `test-index`:
-
-```bash
-curl -s http://localhost:9200/_cat/shards/test-index?v
-```
-
-Expected output:
-
-```
-index       shard prirep state   docs store ip         node
-test-index  0     p      STARTED    1 4.5kb 10.0.1.3  es-data-1
-test-index  0     r      STARTED    1 4.5kb 10.0.1.4  es-data-2
-```
-
-`p` = primary shard, `r` = replica. Each lives on a different data node, so the document survives the loss of either one.
-
-`es-master` holds no shards because its role is `[master]` only.
-
-## Step 13: Final cluster health check
-
-```bash
-curl -s http://localhost:9200/_cluster/health?pretty
-```
-
-`status` should now be `green` with `active_primary_shards: 1` and `active_shards: 2` (one primary + one replica for `test-index`).
-
-## Cluster Summary
-
-| Node       | Roles          | Elected Master | Holds Shards |
-|------------|----------------|----------------|--------------|
-| es-master  | `master`       | yes            | no           |
-| es-data-1  | `data`         | no             | yes          |
-| es-data-2  | `data, ingest` | no             | yes          |
-
-The three containers form the cluster `poridhi-es-cluster`. The master manages state, the data nodes store shards, and `es-data-2` can additionally run ingest pipelines.
-
-## Step 14: Stop the cluster
-
-```bash
-docker compose down
-```
-
-The containers are removed, but the named volumes are kept so `test-index` survives. If you also want to drop the volumes:
-
-```bash
-docker compose down -v
-```
-
-`-v` removes the named volumes too, so the next `docker compose up` starts with an empty cluster.
-
-## Next Steps
-
-This lab completes the cluster setup. You now have a working three-node Elasticsearch cluster with dedicated master, data, and ingest roles. Follow-up labs extend this foundation with index management, mappings, and search operations.
-
----
-
-## Appendix: One-shot bundle (`lab-50-quickrun.sh`)
-
-If the heredoc in Step 2 gets mangled by Puku's paste buffer, paste this block instead. It writes the compose file with `tee`, pre-creates the external network (so `docker compose config` doesn't fail on the first run with `network lab49_net not found`), and validates the YAML before starting containers:
-
-```bash
-# 0. Stop lab-49 stack — keep volumes and network
-cd ~/lab-49 && docker compose down
-docker network inspect lab49_net >/dev/null 2>&1 || docker network create lab49_net
-
-# 1. Build the lab-50 stack
-mkdir -p ~/lab-50 && cd ~/lab-50
-
-tee docker-compose.yml >/dev/null <<'YAML'
-services:
-  es-master:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
-    container_name: es-master
-    environment:
-      - cluster.name=poridhi-es-cluster
-      - node.name=es-master
-      - node.roles=[master]
-      - discovery.seed_hosts=es-data-1,es-data-2
-      - cluster.initial_master_nodes=es-master
-      - network.host=0.0.0.0
-      - http.port=9200
-      - transport.port=9300
-      - ES_JAVA_OPTS=-Xms256m -Xmx256m
-      - xpack.security.enabled=false
-      - xpack.security.enrollment.enabled=false
-      - xpack.security.http.ssl.enabled=false
-      - xpack.security.transport.ssl.enabled=false
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    volumes:
-      - es_master_data:/usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q -E '\"status\":\"(green|yellow)\"'"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
-    restart: unless-stopped
-
-  es-data-1:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
-    container_name: es-data-1
-    environment:
-      - cluster.name=poridhi-es-cluster
-      - node.name=es-data-1
-      - node.roles=[data]
-      - discovery.seed_hosts=es-master,es-data-2
-      - cluster.initial_master_nodes=es-master
-      - network.host=0.0.0.0
-      - http.port=9200
-      - transport.port=9300
-      - ES_JAVA_OPTS=-Xms256m -Xmx256m
-      - xpack.security.enabled=false
-      - xpack.security.enrollment.enabled=false
-      - xpack.security.http.ssl.enabled=false
-      - xpack.security.transport.ssl.enabled=false
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    volumes:
-      - es_data1_data:/usr/share/elasticsearch/data
-    ports:
-      - "9201:9200"
-      - "9301:9300"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q -E '\"status\":\"(green|yellow)\"'"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
-    restart: unless-stopped
-
-  es-data-2:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
-    container_name: es-data-2
-    environment:
-      - cluster.name=poridhi-es-cluster
-      - node.name=es-data-2
-      - node.roles=[data,ingest]
-      - discovery.seed_hosts=es-master,es-data-1
-      - cluster.initial_master_nodes=es-master
-      - network.host=0.0.0.0
-      - http.port=9200
-      - transport.port=9300
-      - ES_JAVA_OPTS=-Xms256m -Xmx256m
-      - xpack.security.enabled=false
-      - xpack.security.enrollment.enabled=false
-      - xpack.security.http.ssl.enabled=false
-      - xpack.security.transport.ssl.enabled=false
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    volumes:
-      - es_data2_data:/usr/share/elasticsearch/data
-    ports:
-      - "9202:9200"
-      - "9302:9300"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q -E '\"status\":\"(green|yellow)\"'"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
-    restart: unless-stopped
-
-volumes:
-  es_master_data:
-    external: true
-    name: lab-49_es_master_data
-  es_data1_data:
-    external: true
-    name: lab-49_es_data1_data
-  es_data2_data:
-    external: true
-    name: lab-49_es_data2_data
-
-networks:
-  default:
-    name: lab49_net
-    external: true
-YAML
-
-# 2. Validate before starting
-docker compose config >/dev/null && echo "compose OK" || { echo "compose INVALID"; exit 1; }
-
-# 3. Start the cluster
-docker compose up -d
-
-# 4. Wait for the cluster to elect a master and for the data nodes to join
-echo "Waiting for cluster health (green or yellow)..."
-for i in $(seq 1 60); do
-  status=$(curl -s http://localhost:9200/_cluster/health 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','unknown'))" 2>/dev/null)
-  nodes=$(curl -s http://localhost:9200/_cluster/health 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('number_of_nodes',0))" 2>/dev/null)
-  echo "  attempt $i: status=$status nodes=$nodes"
-  if [ "$status" = "green" ] || [ "$status" = "yellow" ]; then
-    if [ "$nodes" = "3" ]; then
-      echo "Cluster ready (status=$status, nodes=3)"
-      break
-    fi
-  fi
-  sleep 5
+for pair in "es-master:$ES_MASTER_IP" "es-data-1:$ES_DATA1_IP" "es-data-2:$ES_DATA2_IP"; do
+  NAME="${pair%%:*}"
+  IP="${pair##*:}"
+  echo "--- $NAME ---"
+  ssh -i ~/lab-49/es-lab-key.pem ubuntu@"$IP" \
+    'sudo awk "/^(cluster.name|node.name|node.roles|discovery.seed_hosts)/,/^$/" /etc/elasticsearch/elasticsearch.yml'
 done
 ```
 
-What changed vs. the Step 2 heredoc:
+If any node differs, edit it (Step 5) and restart (Step 6).
 
-- The external `lab49_net` network is created up front if it doesn't already exist. On a fresh Poridhi VM where lab-49 was torn down with `docker compose down -v`, the network also disappears — this guard makes the bundle work in that case too.
-- `docker compose config` validates the YAML immediately; a parse error stops the bundle before any container is created.
-- The trailing loop polls `_cluster/health` for up to 5 minutes and prints `status=` / `nodes=` on each attempt. When both conditions flip to `green/yellow` + `nodes=3`, the cluster is ready for Step 6.
-- `restart: unless-stopped` is added to all three services so a Docker daemon restart on Poridhi brings the cluster back automatically.
+### Check 4 — heap pressure
+
+Three t3.medium instances have 4 GB RAM each. Elasticsearch 8.x defaults to 50% of RAM for the JVM heap, capped at 32 GB — that is roughly 2 GB per node. Lab-49's user-data pins it to 512 MB via `/etc/elasticsearch/jvm.options.d/heap.options`. If you removed that pin, every node would try to claim 2 GB and one of them would be OOM-killed:
+
+```bash
+ssh -i ~/lab-49/es-lab-key.pem ubuntu@"$ES_MASTER_IP" \
+  'cat /etc/elasticsearch/jvm.options.d/heap.options && \
+   free -m'
+```
+
+Expected: `-Xms512m` and `-Xmx512m` on the first two lines, and `free -m` shows at least 1.5 GB of free memory.
+
+## Step 10: Stop the cluster when you are done
+
+You have two options — the same ones lab-49 Step 12 covers:
+
+```bash
+# Option A — stop (keeps data, no compute charges)
+aws ec2 stop-instances \
+  --region "$AWS_REGION" \
+  --instance-ids "$(cat es-master.id)" "$(cat es-data-1.id)" "$(cat es-data-2.id)"
+
+# Option B — terminate (deletes everything)
+aws ec2 terminate-instances \
+  --region "$AWS_REGION" \
+  --instance-ids "$(cat es-master.id)" "$(cat es-data-1.id)" "$(cat es-data-2.id)"
+```
+
+If you intend to continue with the next lab (indexing and search), leave the instances running and skip this step.
+
+## Quick run (copy-paste safe)
+
+A single-paste bundle that walks through Steps 1–8. Each SSH call blocks until Elasticsearch answers on 9200, so the cluster forms by the time you see the final health output:
+
+```bash
+set -euo pipefail
+
+: "${AWS_REGION:=us-east-1}"
+export AWS_REGION
+
+cd ~/lab-49
+
+# Step 1 — instances running
+for f in es-master.id es-data-1.id es-data-2.id; do
+  aws ec2 wait instance-running \
+    --region "$AWS_REGION" \
+    --instance-ids "$(cat "$f")"
+done
+
+# Step 2 — public IPs
+> instances.txt
+for f in es-master.id es-data-1.id es-data-2.id; do
+  INSTANCE_ID=$(cat "$f")
+  PUBLIC_IP=$(aws ec2 describe-instances \
+    --region "$AWS_REGION" --instance-ids "$INSTANCE_ID" \
+    --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
+  echo "$INSTANCE_ID $PUBLIC_IP" >> instances.txt
+done
+
+ES_MASTER_IP=$(awk -v id="$(cat es-master.id)" '$1==id{print $2}' instances.txt)
+ES_DATA1_IP=$(awk  -v id="$(cat es-data-1.id)"  '$1==id{print $2}' instances.txt)
+ES_DATA2_IP=$(awk  -v id="$(cat es-data-2.id)"  '$1==id{print $2}' instances.txt)
+
+# Step 3 — private IPs
+> private-ips.txt
+for f in es-master.id es-data-1.id es-data-2.id; do
+  INSTANCE_ID=$(cat "$f")
+  PRIVATE_IP=$(aws ec2 describe-instances \
+    --region "$AWS_REGION" --instance-ids "$INSTANCE_ID" \
+    --query 'Reservations[0].Instances[0].PrivateIpAddress' --output text)
+  echo "$INSTANCE_ID $PRIVATE_IP" >> private-ips.txt
+done
+
+ES_MASTER_PRIVATE=$(awk -v id="$(cat es-master.id)" '$1==id{print $2}' private-ips.txt)
+ES_DATA1_PRIVATE=$(awk  -v id="$(cat es-data-1.id)"  '$1==id{print $2}' private-ips.txt)
+ES_DATA2_PRIVATE=$(awk  -v id="$(cat es-data-2.id)"  '$1==id{print $2}' private-ips.txt)
+
+# Step 4 — render per-node configs
+mkdir -p ~/lab-50 && cd ~/lab-50
+for f in es-master.yml es-data-1.yml es-data-2.yml; do : > "$f"; done
+
+cat > es-master.yml <<YML
+cluster.name: docker-cluster
+node.name: es-master
+node.roles: [master]
+network.host: 0.0.0.0
+http.port: 9200
+discovery.seed_hosts:
+  - $ES_DATA1_PRIVATE
+  - $ES_DATA2_PRIVATE
+cluster.initial_master_nodes:
+  - es-master
+YML
+
+cat > es-data-1.yml <<YML
+cluster.name: docker-cluster
+node.name: es-data-1
+node.roles: [data]
+network.host: 0.0.0.0
+http.port: 9200
+discovery.seed_hosts:
+  - $ES_MASTER_PRIVATE
+  - $ES_DATA2_PRIVATE
+YML
+
+cat > es-data-2.yml <<YML
+cluster.name: docker-cluster
+node.name: es-data-2
+node.roles: [data, ingest]
+network.host: 0.0.0.0
+http.port: 9200
+discovery.seed_hosts:
+  - $ES_MASTER_PRIVATE
+  - $ES_DATA1_PRIVATE
+YML
+
+# Step 5 — copy each config to its instance
+deploy() {
+  local name="$1" ip="$2"
+  scp -i ~/lab-49/es-lab-key.pem -o StrictHostKeyChecking=accept-new \
+    "$name.yml" "ubuntu@${ip}:/tmp/elasticsearch.yml"
+  ssh -i ~/lab-49/es-lab-key.pem -o StrictHostKeyChecking=accept-new \
+    "ubuntu@${ip}" \
+    'sudo cp /etc/elasticsearch/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml.bak
+     sudo tee /etc/elasticsearch/elasticsearch.yml >/dev/null < /tmp/elasticsearch.yml
+     sudo chown root:elasticsearch /etc/elasticsearch/elasticsearch.yml
+     sudo chmod 660 /etc/elasticsearch/elasticsearch.yml'
+}
+
+deploy es-master "$ES_MASTER_IP"
+deploy es-data-1  "$ES_DATA1_IP"
+deploy es-data-2  "$ES_DATA2_IP"
+
+# Step 6 — restart and wait
+for pair in "es-master:$ES_MASTER_IP" "es-data-1:$ES_DATA1_IP" "es-data-2:$ES_DATA2_IP"; do
+  NAME="${pair%%:*}"; IP="${pair##*:}"
+  ssh -i ~/lab-49/es-lab-key.pem "ubuntu@${IP}" \
+    'sudo systemctl restart elasticsearch.service'
+done
+
+for pair in "es-master:$ES_MASTER_IP" "es-data-1:$ES_DATA1_IP" "es-data-2:$ES_DATA2_IP"; do
+  NAME="${pair%%:*}"; IP="${pair##*:}"
+  ssh -i ~/lab-49/es-lab-key.pem "ubuntu@${IP}" \
+    'for i in $(seq 1 30); do
+       if curl -sf http://localhost:9200 >/dev/null 2>&1; then
+         echo "${NAME}: up after ${i} attempts"
+         exit 0
+       fi
+       sleep 3
+     done
+     echo "${NAME}: did not come up in time"
+     sudo journalctl -u elasticsearch --no-pager -n 80
+     exit 1'
+done
+
+# Step 7 — cluster health
+ssh -i ~/lab-49/es-lab-key.pem "ubuntu@${ES_MASTER_IP}" \
+  'curl -s http://localhost:9200/_cluster/health?pretty'
+
+# Step 8 — node list
+ssh -i ~/lab-49/es-lab-key.pem "ubuntu@${ES_MASTER_IP}" \
+  'curl -s "http://localhost:9200/_cat/nodes?v&pretty"'
+```
+
+Two things differ from the step-by-step version:
+
+- The three YAML files are written with **unquoted heredocs** so the shell expands `$ES_*_PRIVATE` directly into the file. That avoids a `sed -i` pass after writing the configs.
+- `deploy` is a small bash function so the same five-line `scp + ssh` block runs for all three nodes. The step-by-step version spells it out so the role-per-node mapping is obvious.
+
+## Next Steps
+
+This lab completes the cluster setup. You now have a working three-node Elasticsearch cluster with dedicated master, data, and ingest roles running on EC2. Follow-up labs extend this foundation with index management, mappings, and search operations.
