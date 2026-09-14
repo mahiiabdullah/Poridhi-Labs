@@ -41,6 +41,8 @@ Three Elasticsearch 8.x containers running on one host, networked together:
 
 Each service binds port 9200 and 9300 on the host. This lab only starts the containers with a minimal config — the next lab assigns the distinct roles and brings the cluster up.
 
+> **Quick run (copy-paste safe).** Steps 1 → 6 below are also bundled into a single `bash` block at the end of this lab (`lab-49-quickrun.sh`). If the heredoc gets mangled on paste, use the bundle — it writes the file with `tee` and exits non-zero on a YAML parse failure so you see the error immediately.
+
 ## Prerequisites
 
 - Docker and Docker Compose are installed on the lab host:
@@ -136,7 +138,7 @@ Each container uses `discovery.type=single-node` for now — this lets it boot i
 
 `ES_JAVA_OPTS=-Xms256m -Xmx256m` keeps the JVM heap small (256 MB) so three containers can run comfortably on the Poridhi lab host. Bumping this back to 512 MB is fine on hosts with more RAM.
 
-If the heredoc gets mangled by your terminal (long pastes sometimes drop a trailing line), run `wc -l docker-compose.yml` afterwards and confirm the number matches the heredoc body length. A wrong count usually means a line was dropped and the YAML will fail to parse.
+> **Puku paste tip.** If the heredoc gets mangled by your terminal (long pastes sometimes drop a trailing line), run `wc -l docker-compose.yml` afterwards and confirm the number matches the heredoc body length. A wrong count usually means a line was dropped and the YAML will fail to parse. The `lab-49-quickrun.sh` bundle at the end of this lab uses `tee` instead of a heredoc and validates the YAML with `docker compose config` immediately — paste that if the heredoc fails.
 
 ## Step 3: Pull the Elasticsearch image
 
@@ -171,13 +173,13 @@ docker compose ps
 Expected output:
 
 ```
-NAME        IMAGE                                                 COMMAND                  SERVICE     CREATED         STATUS                          PORTS
-es-master   docker.elastic.co/elasticsearch/elasticsearch:8.13.4  "/bin/tini /usr/local…"   es-master   X seconds ago   Up X seconds (health: starting)  0.0.0.0:9200->9200/tcp, 0.0.0.0:9300->9300/tcp
-es-data-1   docker.elastic.co/elasticsearch/elasticsearch:8.13.4  "/bin/tini /usr/local…"   es-data-1   X seconds ago   Up X seconds (health: starting)  0.0.0.0:9201->9200/tcp, 0.0.0.0:9301->9300/tcp
-es-data-2   docker.elastic.co/elasticsearch/elasticsearch:8.13.4  "/bin/tini /usr/local…"   es-data-2   X seconds ago   Up X seconds (health: starting)  0.0.0.0:9202->9200/tcp, 0.0.0.0:9302->9300/tcp
+NAME        IMAGE                                                  COMMAND                  SERVICE     CREATED         STATUS          PORTS
+es-master   docker.elastic.co/elasticsearch/elasticsearch:8.13.4   "/bin/tini -- /usr/l…"   es-master   X seconds ago   Up X seconds    0.0.0.0:9200->9200/tcp, [::]:9200->9200/tcp, 0.0.0.0:9300->9300/tcp, [::]:9300->9300/tcp
+es-data-1   docker.elastic.co/elasticsearch/elasticsearch:8.13.4   "/bin/tini -- /usr/l…"   es-data-1   X seconds ago   Up X seconds    0.0.0.0:9201->9200/tcp, [::]:9201->9200/tcp, 0.0.0.0:9301->9300/tcp, [::]:9301->9300/tcp
+es-data-2   docker.elastic.co/elasticsearch/elasticsearch:8.13.4   "/bin/tini -- /usr/l…"   es-data-2   X seconds ago   Up X seconds    0.0.0.0:9202->9200/tcp, [::]:9202->9200/tcp, 0.0.0.0:9302->9300/tcp, [::]:9302->9300/tcp
 ```
 
-Each row shows `Up` with `(health: starting)`. After about a minute the status changes to `(healthy)`.
+Each row shows `Up` with no `(health: ...)` suffix — lab-49 has no healthcheck configured, so `STATUS` only carries the uptime. The lab-50 compose adds a cluster-health healthcheck; once you run lab-50, `STATUS` will switch to `Up X seconds (healthy)` once the bootstrap checks pass.
 
 ## Step 7: Tail the master node logs
 
@@ -213,7 +215,7 @@ Expected response:
 ```json
 {
   "name" : "es-master",
-  "cluster_name" : "docker-test-cluster",
+  "cluster_name" : "docker-cluster",
   "cluster_uuid" : "...",
   "version" : {
     "number" : "8.13.4",
@@ -223,7 +225,7 @@ Expected response:
 }
 ```
 
-The `name` field matches the container name. `cluster_name` reads `docker-test-cluster` because each container is currently in `single-node` discovery mode.
+The `name` field matches the container name. `cluster_name` reads `docker-cluster` (the Elasticsearch default when no `cluster.name` is set in single-node mode). The next lab changes this to `poridhi-es-cluster` so all three nodes share one cluster.
 
 ## Step 9: Verify es-data-1
 
@@ -279,16 +281,16 @@ Expected output:
 
 ```
 --- localhost:9200 ---
-name=es-master cluster=docker-test-cluster
+name=01f860eb23ef cluster=docker-cluster
 
 --- localhost:9201 ---
-name=es-data-1 cluster=docker-test-cluster
+name=55d6bcd779f8 cluster=docker-cluster
 
 --- localhost:9202 ---
-name=es-data-2 cluster=docker-test-cluster
+name=a232211898c9 cluster=docker-cluster
 ```
 
-All three nodes boot independently. Each lives in its own `docker-test-cluster` single-node cluster because `discovery.type=single-node` is still in effect.
+The `name` values are the auto-generated container IDs (Elasticsearch defaults to the Docker container ID when `node.name` is not set — that's fine for lab-49; lab-50 sets `node.name` explicitly per service). All three nodes boot independently in `docker-cluster` because `discovery.type=single-node` is still in effect.
 
 ## Step 13: Stop the stack
 
@@ -331,3 +333,90 @@ These volumes survive `docker compose down` and `docker compose up` — they are
 ## Next Steps
 
 In the next lab we will changes `docker-compose.yml` to a multi-node setup: a single shared `cluster.name`, distinct `node.roles` per container, and a discovery list using service names so the three containers form one Elasticsearch cluster.
+
+---
+
+## Appendix: One-shot bundle (`lab-49-quickrun.sh`)
+
+If the heredoc in Step 2 gets mangled by Puku's paste buffer, paste this block instead. It writes the compose file with `tee` line-by-line and runs `docker compose config` immediately so any YAML problem surfaces right away:
+
+```bash
+mkdir -p ~/lab-49 && cd ~/lab-49
+
+tee docker-compose.yml >/dev/null <<'YAML'
+services:
+  es-master:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    container_name: es-master
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es_master_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    restart: unless-stopped
+
+  es-data-1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    container_name: es-data-1
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es_data1_data:/usr/share/elasticsearch/data
+    ports:
+      - "9201:9200"
+      - "9301:9300"
+    restart: unless-stopped
+
+  es-data-2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    container_name: es-data-2
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es_data2_data:/usr/share/elasticsearch/data
+    ports:
+      - "9202:9200"
+      - "9302:9300"
+    restart: unless-stopped
+
+volumes:
+  es_master_data:
+  es_data1_data:
+  es_data2_data:
+
+networks:
+  default:
+    name: lab49_net
+    driver: bridge
+YAML
+
+docker compose config >/dev/null && echo "compose OK" || { echo "compose INVALID"; exit 1; }
+docker compose pull
+docker compose up -d
+```
+
+What changed vs. the Step 2 heredoc:
+
+- `tee` with `>/dev/null` writes to the file while discarding the echo — more resilient to Puku paste truncation than a single-block heredoc.
+- `docker compose config >/dev/null` validates the YAML immediately. A failed parse exits with code 1 before any container is created, so you don't end up with half-started services.
+- `restart: unless-stopped` is added so a Docker daemon restart on Poridhi (common after sandbox idle) brings the three containers back automatically without rerunning Step 5.

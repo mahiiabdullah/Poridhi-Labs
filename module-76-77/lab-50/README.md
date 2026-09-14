@@ -50,6 +50,19 @@ Complete the previous lab first. You need:
 - The three Elasticsearch containers stopped (you ran `docker compose down` at the end of the previous lab).
 - The named volumes still present (`es_master_data`, `es_data1_data`, `es_data2_data`).
 
+## Step 0: Stop lab-49 and verify its volumes and network survive
+
+Before starting lab-50, stop the lab-49 stack but **do not remove the volumes or the network** — lab-50 attaches them as `external`. Plain `down` only, never `down -v`:
+
+```bash
+cd ~/lab-49
+docker compose down
+docker volume ls | grep -E 'lab-49_es_(master|data[12])_data'
+docker network ls | grep lab49_net
+```
+
+Expected output: three volumes (`lab-49_es_master_data`, `lab-49_es_data1_data`, `lab-49_es_data2_data`) and one network (`lab49_net`). If any are missing, the previous lab was torn down with `docker compose down -v` — recreate the lab-49 stack, run `docker compose down` (no `-v`), and come back.
+
 ## Step 1: Create the lab-50 directory
 
 ```bash
@@ -99,6 +112,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 30
+    restart: unless-stopped
 
   es-data-1:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
@@ -131,6 +145,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 30
+    restart: unless-stopped
 
   es-data-2:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
@@ -163,6 +178,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 30
+    restart: unless-stopped
 
 volumes:
   es_master_data:
@@ -457,3 +473,164 @@ docker compose down -v
 ## Next Steps
 
 This lab completes the cluster setup. You now have a working three-node Elasticsearch cluster with dedicated master, data, and ingest roles. Follow-up labs extend this foundation with index management, mappings, and search operations.
+
+---
+
+## Appendix: One-shot bundle (`lab-50-quickrun.sh`)
+
+If the heredoc in Step 2 gets mangled by Puku's paste buffer, paste this block instead. It writes the compose file with `tee`, pre-creates the external network (so `docker compose config` doesn't fail on the first run with `network lab49_net not found`), and validates the YAML before starting containers:
+
+```bash
+# 0. Stop lab-49 stack — keep volumes and network
+cd ~/lab-49 && docker compose down
+docker network inspect lab49_net >/dev/null 2>&1 || docker network create lab49_net
+
+# 1. Build the lab-50 stack
+mkdir -p ~/lab-50 && cd ~/lab-50
+
+tee docker-compose.yml >/dev/null <<'YAML'
+services:
+  es-master:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    container_name: es-master
+    environment:
+      - cluster.name=poridhi-es-cluster
+      - node.name=es-master
+      - node.roles=[master]
+      - discovery.seed_hosts=es-data-1,es-data-2
+      - cluster.initial_master_nodes=es-master
+      - network.host=0.0.0.0
+      - http.port=9200
+      - transport.port=9300
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es_master_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q -E '\"status\":\"(green|yellow)\"'"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  es-data-1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    container_name: es-data-1
+    environment:
+      - cluster.name=poridhi-es-cluster
+      - node.name=es-data-1
+      - node.roles=[data]
+      - discovery.seed_hosts=es-master,es-data-2
+      - cluster.initial_master_nodes=es-master
+      - network.host=0.0.0.0
+      - http.port=9200
+      - transport.port=9300
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es_data1_data:/usr/share/elasticsearch/data
+    ports:
+      - "9201:9200"
+      - "9301:9300"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q -E '\"status\":\"(green|yellow)\"'"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  es-data-2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    container_name: es-data-2
+    environment:
+      - cluster.name=poridhi-es-cluster
+      - node.name=es-data-2
+      - node.roles=[data,ingest]
+      - discovery.seed_hosts=es-master,es-data-1
+      - cluster.initial_master_nodes=es-master
+      - network.host=0.0.0.0
+      - http.port=9200
+      - transport.port=9300
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es_data2_data:/usr/share/elasticsearch/data
+    ports:
+      - "9202:9200"
+      - "9302:9300"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q -E '\"status\":\"(green|yellow)\"'"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+volumes:
+  es_master_data:
+    external: true
+    name: lab-49_es_master_data
+  es_data1_data:
+    external: true
+    name: lab-49_es_data1_data
+  es_data2_data:
+    external: true
+    name: lab-49_es_data2_data
+
+networks:
+  default:
+    name: lab49_net
+    external: true
+YAML
+
+# 2. Validate before starting
+docker compose config >/dev/null && echo "compose OK" || { echo "compose INVALID"; exit 1; }
+
+# 3. Start the cluster
+docker compose up -d
+
+# 4. Wait for the cluster to elect a master and for the data nodes to join
+echo "Waiting for cluster health (green or yellow)..."
+for i in $(seq 1 60); do
+  status=$(curl -s http://localhost:9200/_cluster/health 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','unknown'))" 2>/dev/null)
+  nodes=$(curl -s http://localhost:9200/_cluster/health 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('number_of_nodes',0))" 2>/dev/null)
+  echo "  attempt $i: status=$status nodes=$nodes"
+  if [ "$status" = "green" ] || [ "$status" = "yellow" ]; then
+    if [ "$nodes" = "3" ]; then
+      echo "Cluster ready (status=$status, nodes=3)"
+      break
+    fi
+  fi
+  sleep 5
+done
+```
+
+What changed vs. the Step 2 heredoc:
+
+- The external `lab49_net` network is created up front if it doesn't already exist. On a fresh Poridhi VM where lab-49 was torn down with `docker compose down -v`, the network also disappears — this guard makes the bundle work in that case too.
+- `docker compose config` validates the YAML immediately; a parse error stops the bundle before any container is created.
+- The trailing loop polls `_cluster/health` for up to 5 minutes and prints `status=` / `nodes=` on each attempt. When both conditions flip to `green/yellow` + `nodes=3`, the cluster is ready for Step 6.
+- `restart: unless-stopped` is added to all three services so a Docker daemon restart on Poridhi brings the cluster back automatically.
