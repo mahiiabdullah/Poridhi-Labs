@@ -6,7 +6,7 @@ This lab provisions three Elasticsearch nodes on AWS EC2. Each node is its own U
 
 ## Architecture
 
-<p align="center"><img src="./images/architecture.png" alt="Lab 49 Architecture"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-76-77/lab-49/images/architecture.svg" alt="Lab 49 Architecture"></p>
 
 ## Concept
 

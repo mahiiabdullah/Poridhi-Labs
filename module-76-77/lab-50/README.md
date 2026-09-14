@@ -6,7 +6,7 @@ This lab wires the three EC2 instances from lab-49 into a single Elasticsearch c
 
 ## Architecture
 
-<p align="center"><img src="./images/architecture.png" alt="Lab 50 Architecture"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-76-77/lab-50/images/architecture.svg" alt="Lab 50 Architecture"></p>
 
 ## Concept
 
