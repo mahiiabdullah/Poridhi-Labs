@@ -277,14 +277,14 @@ hostname -I
 
 Use the first IP as `LB_IP`. Open the Load Balancer modal.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-76-77/lab-51/images/Step-9%20expose%20ports.png" alt="Expose ports"></p>
-
 Expose two ports:
 
 | Enter IP | Enter Port |
 |----------|------------|
 | `LB_IP` | `5000` (Flask API) |
 | `LB_IP` | `9200` (Elasticsearch direct) |
+
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-76-77/lab-51/images/Step-9%20expose%20ports.png" alt="Expose ports"></p>
 
 Click **Expose** for each. Copy the generated `.lb.poridhi.io` URL for port 5000 — the rest of the lab uses it as `<FLASK-LB-URL>`.
 
@@ -372,25 +372,21 @@ The `title` field has a `^2` boost, so documents with "flask" in the title score
 
 ## Step 14: Try different search queries
 
-Run a few more searches to see multi-field matching in action:
+Run a few more searches on your own to see multi-field matching in action. Paste each `curl`, look at the JSON response, and notice how the scores change with each query:
 
 ```bash
 curl "<FLASK-LB-URL>/search?q=elasticsearch"
 ```
 
-Returns documents mentioning Elasticsearch in title, content, or tags.
-
 ```bash
 curl "<FLASK-LB-URL>/search?q=docker"
 ```
-
-Returns the Docker Compose document.
 
 ```bash
 curl "<FLASK-LB-URL>/search?q=python+web"
 ```
 
-Returns documents mentioning either "python" or "web" across any field. Elasticsearch scores documents higher when more terms match.
+The `multi_match` query searches across `title`, `content`, and `tags` at the same time. Documents score higher when more terms match, and title matches get an extra `^2` boost.
 
 ## Step 15: Verify the data directly in Elasticsearch
 
@@ -414,7 +410,9 @@ This returns the raw Elasticsearch response with all five documents and their me
 
 ## Step 16: Test error handling
 
-Send a request without the required fields:
+Try the bad inputs yourself and look at the responses. The Flask API returns `400 Bad Request` with a JSON error body when input validation fails.
+
+Index without the required `title` and `content`:
 
 ```bash
 curl -X POST <FLASK-LB-URL>/index \
@@ -422,29 +420,13 @@ curl -X POST <FLASK-LB-URL>/index \
   -d '{}'
 ```
 
-Expected response:
-
-```json
-{
-  "error": "'title' and 'content' fields are required"
-}
-```
-
-Search without a query parameter:
+Search without the `q` query parameter:
 
 ```bash
 curl "<FLASK-LB-URL>/search"
 ```
 
-Expected response:
-
-```json
-{
-  "error": "Query parameter 'q' is required"
-}
-```
-
-Both return `400 Bad Request` with a clear error message.
+In both cases the API rejects the request with `400 Bad Request` and a clear `error` message — no document is written, no search is run.
 
 ## Step 17: Stop the stack
 
