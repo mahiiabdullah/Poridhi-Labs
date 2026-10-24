@@ -1,6 +1,6 @@
-<svg viewBox="0 0 1400 780" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+<svg viewBox="0 33 1400 722" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
   <!-- Opaque background so GitHub dark themes do not show through -->
-  <rect x="0" y="0" width="1400" height="780" fill="#ffffff"/>
+  <rect x="0" y="33" width="1400" height="722" fill="#ffffff"/>
 
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -19,7 +19,6 @@
       <path d="M0,0 L10,5 L0,10 z" fill="#888888"/>
     </marker>
   </defs>
-  <text x="700" y="38" font-size="17" font-weight="700" fill="#1a1a2e" text-anchor="middle">Integration — Microservice Stack</text>
 
   <!-- ============ DEMO SCRIPT ============ -->
   <rect x="20" y="370" width="170" height="110" rx="10" ry="10" fill="#fafafa" stroke="#a6a6a6" stroke-width="1.5"/>
@@ -140,14 +139,4 @@
   <path d="M 105,480 V 592 H 1000 V 520" fill="none" stroke="#b91c1c" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow-red)"><animate attributeName="stroke-dashoffset" values="14;0" dur="1.2s" repeatCount="indefinite"/></path>
   <rect x="617" y="576.5" width="167" height="15.5" rx="3" ry="3" fill="#ffffff" stroke="none"/>
   <text x="700" y="587" font-size="10.5" font-weight="400" fill="#b91c1c" text-anchor="middle">docker compose stop / start</text>
-  <path d="M 230,760 H 276" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow)"/>
-  <text x="286" y="764" font-size="11" font-weight="400" fill="#666666" text-anchor="start">HTTP</text>
-  <path d="M 344.8,760 H 390.8" fill="none" stroke="#0e7490" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow-teal)"/>
-  <text x="400.8" y="764" font-size="11" font-weight="400" fill="#666666" text-anchor="start">HTTP with timeout and retry</text>
-  <path d="M 602.2,760 H 648.2" fill="none" stroke="#e36209" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow-orange)"/>
-  <text x="658.2" y="764" font-size="11" font-weight="400" fill="#666666" text-anchor="start">message through RabbitMQ</text>
-  <path d="M 841.0,760 H 887.0" fill="none" stroke="#888888" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow-grey)"/>
-  <text x="897.0" y="764" font-size="11" font-weight="400" fill="#666666" text-anchor="start">shared-library import</text>
-  <path d="M 1061.2,760 H 1107.2" fill="none" stroke="#b91c1c" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow-red)"/>
-  <text x="1117.2" y="764" font-size="11" font-weight="400" fill="#666666" text-anchor="start">demo.sh stops and starts services</text>
 </svg>
