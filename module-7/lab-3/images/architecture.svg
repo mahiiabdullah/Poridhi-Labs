@@ -1,0 +1,131 @@
+<svg viewBox="0 0 1200 700" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+  <!-- Opaque background so GitHub dark themes do not show through -->
+  <rect x="0" y="0" width="1200" height="700" fill="#ffffff"/>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1a1a1a"/>
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#e36209"/>
+    </marker>
+    <marker id="arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0e7490"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+    <marker id="arrow-grey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#888888"/>
+    </marker>
+  </defs>
+  <text x="600" y="38" font-size="17" font-weight="700" fill="#1a1a2e" text-anchor="middle">Inter-Service Communication</text>
+
+  <!-- ============ CLIENT ============ -->
+  <rect x="20" y="290" width="110" height="110" rx="10" ry="10" fill="#fafafa" stroke="#a6a6a6" stroke-width="1.5"/>
+  <text x="75.0" y="314" font-size="15" font-weight="700" fill="#1a1a1a" text-anchor="middle">Client</text>
+  <text x="75.0" y="334" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">curl</text>
+  <g transform="translate(75,378)" stroke="#1a1a1a" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="-11" y="-8" width="22" height="16" rx="3"/>
+    <path d="M-6,-3 L-2,0 L-6,3"/>
+    <line x1="1" y1="3" x2="6" y2="3"/>
+  </g>
+
+  <!-- ============ COMPOSE BOUNDARY ============ -->
+  <rect x="185" y="70" width="1000" height="560" rx="14" ry="14" fill="none" stroke="#a6a6a6" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <rect x="201" y="58" width="190" height="24" rx="6" ry="6" fill="#a6a6a6" stroke="none"/>
+  <text x="296.0" y="74" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">docker compose</text>
+
+  <!-- ============ SERVICES ============ -->
+  <rect x="240" y="285" width="220" height="130" rx="10" ry="10" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.5"/>
+  <text x="350.0" y="309" font-size="15" font-weight="700" fill="#1a1a1a" text-anchor="middle">order-service</text>
+  <text x="350.0" y="329" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">:3003</text>
+  <text x="350.0" y="346" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">stores the order as PENDING</text>
+  <text x="350.0" y="363" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">returns 202 Accepted</text>
+  <rect x="610" y="90" width="220" height="100" rx="10" ry="10" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.5"/>
+  <text x="720.0" y="114" font-size="15" font-weight="700" fill="#1a1a1a" text-anchor="middle">user-service</text>
+  <text x="720.0" y="134" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">:3001</text>
+  <text x="720.0" y="151" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">FAIL_FIRST injects 503s</text>
+  <rect x="880" y="285" width="220" height="130" rx="10" ry="10" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.5"/>
+  <text x="990.0" y="309" font-size="15" font-weight="700" fill="#1a1a1a" text-anchor="middle">product-service</text>
+  <text x="990.0" y="329" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">:3002</text>
+  <text x="990.0" y="346" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">reserves stock once</text>
+  <text x="990.0" y="363" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">per order id</text>
+
+  <!-- ============ RABBITMQ ============ -->
+  <rect x="560" y="245" width="200" height="215" rx="14" ry="14" fill="#fafafa" stroke="#e36209" stroke-width="1.8"/>
+  <g transform="translate(585,268)" stroke="#e36209" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M0,-11 L11,0 L0,11 L-11,0 z"/>
+    <line x1="-5" y1="0" x2="5" y2="0"/>
+  </g>
+  <text x="660" y="274" font-size="15" font-weight="700" fill="#1a1a1a" text-anchor="middle">RabbitMQ</text>
+  <rect x="580" y="290" width="160" height="50" rx="8" ry="8" fill="#ffffff" stroke="#e36209" stroke-width="1.5"/>
+  <text x="660" y="320" font-size="13" font-weight="700" fill="#1a1a1a" text-anchor="middle">order.created</text>
+  <rect x="580" y="365" width="160" height="50" rx="8" ry="8" fill="#ffffff" stroke="#e36209" stroke-width="1.5"/>
+  <text x="660" y="395" font-size="13" font-weight="700" fill="#1a1a1a" text-anchor="middle">stock.result</text>
+  <text x="660" y="445" font-size="10.5" font-weight="400" fill="#666666" text-anchor="middle">durable · persistent · manual ack</text>
+
+  <!-- ============ DATABASES ============ -->
+  <rect x="240" y="510" width="220" height="90" rx="10" ry="10" fill="#fafafa" stroke="#a6a6a6" stroke-width="1.5"/>
+  <text x="350.0" y="534" font-size="15" font-weight="700" fill="#1a1a1a" text-anchor="middle">orders DB</text>
+  <text x="350.0" y="554" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">order-db</text>
+  <text x="350.0" y="571" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">PENDING, CONFIRMED, REJECTED</text>
+  <g transform="translate(350,590)" stroke="#1a1a1a" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="0" cy="-8" rx="10" ry="4"/>
+    <path d="M-10,-8 V8 A10,4 0 0 0 10,8 V-8"/>
+    <path d="M-10,0 A10,4 0 0 0 10,0"/>
+  </g>
+  <rect x="880" y="510" width="220" height="90" rx="10" ry="10" fill="#fafafa" stroke="#a6a6a6" stroke-width="1.5"/>
+  <text x="990.0" y="534" font-size="15" font-weight="700" fill="#1a1a1a" text-anchor="middle">products DB</text>
+  <text x="990.0" y="554" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">product-db</text>
+  <text x="990.0" y="571" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">stock_reservations table</text>
+  <g transform="translate(990,590)" stroke="#1a1a1a" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="0" cy="-8" rx="10" ry="4"/>
+    <path d="M-10,-8 V8 A10,4 0 0 0 10,8 V-8"/>
+    <path d="M-10,0 A10,4 0 0 0 10,0"/>
+  </g>
+  <rect x="900" y="90" width="200" height="100" rx="10" ry="10" fill="#fafafa" stroke="#a6a6a6" stroke-width="1.5"/>
+  <text x="1000.0" y="114" font-size="15" font-weight="700" fill="#1a1a1a" text-anchor="middle">users DB</text>
+  <text x="1000.0" y="134" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">user-db</text>
+  <text x="1000.0" y="151" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">PostgreSQL 16</text>
+  <g transform="translate(1000,175)" stroke="#1a1a1a" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="0" cy="-8" rx="10" ry="4"/>
+    <path d="M-10,-8 V8 A10,4 0 0 0 10,8 V-8"/>
+    <path d="M-10,0 A10,4 0 0 0 10,0"/>
+  </g>
+
+  <!-- ============ ANIMATED ARROWS ============ -->
+  <path d="M 130,345 H 240" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow)"><animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/></path>
+  <rect x="146" y="324.5" width="79" height="15.5" rx="3" ry="3" fill="#ffffff" stroke="none"/>
+  <text x="185" y="335" font-size="10.5" font-weight="400" fill="#444444" text-anchor="middle">POST /orders</text>
+  <path d="M 350,285 V 140 H 610" fill="none" stroke="#0e7490" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow-teal)"><animate attributeName="stroke-dashoffset" values="14;0" dur="1.2s" repeatCount="indefinite"/></path>
+  <rect x="435" y="119.5" width="90" height="15.5" rx="3" ry="3" fill="#ffffff" stroke="none"/>
+  <text x="480" y="130" font-size="10.5" font-weight="400" fill="#0e7490" text-anchor="middle">GET /users/:id</text>
+  <rect x="358" y="149.5" width="243" height="15.5" rx="3" ry="3" fill="#ffffff" stroke="none"/>
+  <text x="480" y="160" font-size="10.5" font-weight="400" fill="#0e7490" text-anchor="middle">timeout 1.5 s · retry 200 / 400 / 800 ms</text>
+  <path d="M 830,140 H 900" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow)"><animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/></path>
+  <rect x="852" y="119.5" width="26" height="15.5" rx="3" ry="3" fill="#ffffff" stroke="none"/>
+  <text x="865" y="130" font-size="10.5" font-weight="400" fill="#444444" text-anchor="middle">SQL</text>
+  <path d="M 460,310 H 580" fill="none" stroke="#e36209" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow-orange)"><animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/></path>
+  <rect x="466" y="289.5" width="84" height="15.5" rx="3" ry="3" fill="#ffffff" stroke="none"/>
+  <text x="508" y="300" font-size="10.5" font-weight="400" fill="#e36209" text-anchor="middle">order.created</text>
+  <path d="M 740,310 H 880" fill="none" stroke="#e36209" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow-orange)"><animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/></path>
+  <rect x="785" y="289.5" width="49" height="15.5" rx="3" ry="3" fill="#ffffff" stroke="none"/>
+  <text x="810" y="300" font-size="10.5" font-weight="400" fill="#e36209" text-anchor="middle">consume</text>
+  <path d="M 880,390 H 740" fill="none" stroke="#e36209" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow-orange)"><animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/></path>
+  <rect x="765" y="369.5" width="90" height="15.5" rx="3" ry="3" fill="#ffffff" stroke="none"/>
+  <text x="810" y="380" font-size="10.5" font-weight="400" fill="#e36209" text-anchor="middle">publish result</text>
+  <path d="M 580,390 H 460" fill="none" stroke="#e36209" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow-orange)"><animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/></path>
+  <rect x="469" y="369.5" width="79" height="15.5" rx="3" ry="3" fill="#ffffff" stroke="none"/>
+  <text x="508" y="380" font-size="10.5" font-weight="400" fill="#e36209" text-anchor="middle">stock.result</text>
+  <path d="M 350,415 V 510" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow)"><animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/></path>
+  <text x="362" y="465" font-size="10.5" font-weight="400" fill="#444444" text-anchor="start">SQL</text>
+  <path d="M 990,415 V 510" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow)"><animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/></path>
+  <text x="1002" y="465" font-size="10.5" font-weight="400" fill="#444444" text-anchor="start">SQL (one transaction)</text>
+  <path d="M 200,668 H 246" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow)"/>
+  <text x="256" y="672" font-size="11" font-weight="400" fill="#666666" text-anchor="start">HTTP</text>
+  <path d="M 314.8,668 H 360.8" fill="none" stroke="#0e7490" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow-teal)"/>
+  <text x="370.8" y="672" font-size="11" font-weight="400" fill="#666666" text-anchor="start">HTTP with timeout and retry</text>
+  <path d="M 572.2,668 H 618.2" fill="none" stroke="#e36209" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow-orange)"/>
+  <text x="628.2" y="672" font-size="11" font-weight="400" fill="#666666" text-anchor="start">message through RabbitMQ</text>
+</svg>
