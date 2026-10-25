@@ -21,7 +21,7 @@
   </defs>
 
   <!-- ============ DEMO SCRIPT ============ -->
-  <rect x="20" y="370" width="170" height="110" rx="10" ry="10" fill="#fafafa" stroke="#a6a6a6" stroke-width="1.5"/>
+  <rect x="20" y="370" width="170" height="110" rx="10" ry="10" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5"/>
   <text x="105.0" y="394" font-size="15" font-weight="700" fill="#1a1a1a" text-anchor="middle">demo.sh</text>
   <text x="105.0" y="414" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">4 scenarios</text>
   <text x="105.0" y="431" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">PASS / FAIL checks</text>
@@ -32,33 +32,33 @@
   </g>
 
   <!-- ============ COMPOSE BOUNDARY ============ -->
-  <rect x="235" y="70" width="1140" height="660" rx="14" ry="14" fill="none" stroke="#a6a6a6" stroke-width="1.5" stroke-dasharray="6,4"/>
-  <rect x="251" y="58" width="190" height="24" rx="6" ry="6" fill="#a6a6a6" stroke="none"/>
+  <rect x="235" y="70" width="1140" height="660" rx="14" ry="14" fill="#f5f5f5" stroke="#666666" stroke-width="1.5"/>
+  <rect x="251" y="58" width="190" height="24" rx="6" ry="6" fill="#666666" stroke="none"/>
   <text x="346.0" y="74" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">docker compose</text>
 
   <!-- ============ SHARED LIBRARY ============ -->
-  <rect x="300" y="95" width="1000" height="56" rx="8" ry="8" fill="#f2f2f2" stroke="#a6a6a6" stroke-width="1.5"/>
+  <rect x="300" y="95" width="1000" height="56" rx="8" ry="8" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
   <text x="800.0" y="119" font-size="15" font-weight="700" fill="#1a1a1a" text-anchor="middle">shop-shared</text>
   <text x="800" y="138" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">errors · validate · asyncHandler · httpClient · rabbit · events   (mounted at /app/node_modules/shop-shared)</text>
 
   <!-- ============ SERVICES ============ -->
-  <rect x="660" y="200" width="220" height="100" rx="10" ry="10" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.5"/>
+  <rect x="660" y="200" width="220" height="100" rx="10" ry="10" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
   <text x="770.0" y="224" font-size="15" font-weight="700" fill="#1a1a1a" text-anchor="middle">user-service</text>
   <text x="770.0" y="244" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">:3001</text>
   <text x="770.0" y="261" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">GET /users/:id</text>
-  <rect x="270" y="390" width="220" height="130" rx="10" ry="10" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.5"/>
+  <rect x="270" y="390" width="220" height="130" rx="10" ry="10" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
   <text x="380.0" y="414" font-size="15" font-weight="700" fill="#1a1a1a" text-anchor="middle">order-service</text>
   <text x="380.0" y="434" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">:3003</text>
   <text x="380.0" y="451" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">PENDING, then CONFIRMED</text>
   <text x="380.0" y="468" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">or REJECTED</text>
-  <rect x="940" y="390" width="220" height="130" rx="10" ry="10" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.5"/>
+  <rect x="940" y="390" width="220" height="130" rx="10" ry="10" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
   <text x="1050.0" y="414" font-size="15" font-weight="700" fill="#1a1a1a" text-anchor="middle">product-service</text>
   <text x="1050.0" y="434" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">:3002</text>
   <text x="1050.0" y="451" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">idempotent stock</text>
   <text x="1050.0" y="468" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">reservation</text>
 
   <!-- ============ RABBITMQ ============ -->
-  <rect x="600" y="345" width="200" height="215" rx="14" ry="14" fill="#fafafa" stroke="#e36209" stroke-width="1.8"/>
+  <rect x="600" y="345" width="200" height="215" rx="14" ry="14" fill="#ffe6cc" stroke="#e36209" stroke-width="1.8"/>
   <g transform="translate(625,368)" stroke="#e36209" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
     <path d="M0,-11 L11,0 L0,11 L-11,0 z"/>
     <line x1="-5" y1="0" x2="5" y2="0"/>
@@ -71,7 +71,7 @@
   <text x="700" y="545" font-size="10.5" font-weight="400" fill="#666666" text-anchor="middle">durable · persistent · manual ack</text>
 
   <!-- ============ DATABASES ============ -->
-  <rect x="940" y="200" width="200" height="100" rx="10" ry="10" fill="#fafafa" stroke="#a6a6a6" stroke-width="1.5"/>
+  <rect x="940" y="200" width="200" height="100" rx="10" ry="10" fill="#f8cecc" stroke="#b85450" stroke-width="1.5"/>
   <text x="1040.0" y="224" font-size="15" font-weight="700" fill="#1a1a1a" text-anchor="middle">users DB</text>
   <text x="1040.0" y="244" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">user-db</text>
   <text x="1040.0" y="261" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">PostgreSQL 16</text>
@@ -80,7 +80,7 @@
     <path d="M-10,-8 V8 A10,4 0 0 0 10,8 V-8"/>
     <path d="M-10,0 A10,4 0 0 0 10,0"/>
   </g>
-  <rect x="270" y="620" width="220" height="90" rx="10" ry="10" fill="#fafafa" stroke="#a6a6a6" stroke-width="1.5"/>
+  <rect x="270" y="620" width="220" height="90" rx="10" ry="10" fill="#f8cecc" stroke="#b85450" stroke-width="1.5"/>
   <text x="380.0" y="644" font-size="15" font-weight="700" fill="#1a1a1a" text-anchor="middle">orders DB</text>
   <text x="380.0" y="664" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">order-db</text>
   <text x="380.0" y="681" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">PostgreSQL 16</text>
@@ -89,7 +89,7 @@
     <path d="M-10,-8 V8 A10,4 0 0 0 10,8 V-8"/>
     <path d="M-10,0 A10,4 0 0 0 10,0"/>
   </g>
-  <rect x="940" y="620" width="220" height="90" rx="10" ry="10" fill="#fafafa" stroke="#a6a6a6" stroke-width="1.5"/>
+  <rect x="940" y="620" width="220" height="90" rx="10" ry="10" fill="#f8cecc" stroke="#b85450" stroke-width="1.5"/>
   <text x="1050.0" y="644" font-size="15" font-weight="700" fill="#1a1a1a" text-anchor="middle">products DB</text>
   <text x="1050.0" y="664" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">product-db</text>
   <text x="1050.0" y="681" font-size="11.5" font-weight="400" fill="#666666" text-anchor="middle">PostgreSQL 16</text>
@@ -102,7 +102,7 @@
   <!-- ============ WIRING (shared library imports) ============ -->
   <path d="M 330,151 V 390" fill="none" stroke="#888888" stroke-width="1.8" stroke-dasharray="5,4" marker-end="url(#arrow-grey)"><animate attributeName="stroke-dashoffset" values="14;0" dur="1.2s" repeatCount="indefinite"/></path>
   <path d="M 770,151 V 200" fill="none" stroke="#888888" stroke-width="1.8" stroke-dasharray="5,4" marker-end="url(#arrow-grey)"><animate attributeName="stroke-dashoffset" values="14;0" dur="0.6s" repeatCount="indefinite"/></path>
-  <path d="M 1130,151 V 390" fill="none" stroke="#888888" stroke-width="1.8" stroke-dasharray="5,4" marker-end="url(#arrow-grey)"><animate attributeName="stroke-dashoffset" values="14;0" dur="1.2s" repeatCount="indefinite"/></path>
+  <path d="M 1250,151 V 455 H 1160" fill="none" stroke="#888888" stroke-width="1.8" stroke-dasharray="5,4" marker-end="url(#arrow-grey)"><animate attributeName="stroke-dashoffset" values="14;0" dur="1.2s" repeatCount="indefinite"/></path>
   <text x="342" y="260" font-size="10.5" font-weight="400" fill="#888888" text-anchor="start">import</text>
 
   <!-- ============ ANIMATED ARROWS ============ -->
@@ -110,24 +110,24 @@
   <rect x="191" y="409.5" width="79" height="15.5" rx="3" ry="3" fill="#ffffff" stroke="none"/>
   <text x="230" y="420" font-size="10.5" font-weight="400" fill="#444444" text-anchor="middle">POST /orders</text>
   <path d="M 440,390 V 250 H 660" fill="none" stroke="#0e7490" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow-teal)"><animate attributeName="stroke-dashoffset" values="14;0" dur="1.2s" repeatCount="indefinite"/></path>
-  <rect x="505" y="229.5" width="90" height="15.5" rx="3" ry="3" fill="#ffffff" stroke="none"/>
+  <rect x="505" y="229.5" width="90" height="15.5" rx="3" ry="3" fill="#f5f5f5" stroke="none"/>
   <text x="550" y="240" font-size="10.5" font-weight="400" fill="#0e7490" text-anchor="middle">GET /users/:id</text>
-  <rect x="502" y="259.5" width="96" height="15.5" rx="3" ry="3" fill="#ffffff" stroke="none"/>
+  <rect x="502" y="259.5" width="96" height="15.5" rx="3" ry="3" fill="#f5f5f5" stroke="none"/>
   <text x="550" y="270" font-size="10.5" font-weight="400" fill="#0e7490" text-anchor="middle">timeout + retry</text>
   <path d="M 880,250 H 940" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow)"><animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/></path>
-  <rect x="897" y="229.5" width="26" height="15.5" rx="3" ry="3" fill="#ffffff" stroke="none"/>
+  <rect x="897" y="229.5" width="26" height="15.5" rx="3" ry="3" fill="#f5f5f5" stroke="none"/>
   <text x="910" y="240" font-size="10.5" font-weight="400" fill="#444444" text-anchor="middle">SQL</text>
   <path d="M 490,410 H 620" fill="none" stroke="#e36209" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow-orange)"><animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/></path>
-  <rect x="501" y="389.5" width="84" height="15.5" rx="3" ry="3" fill="#ffffff" stroke="none"/>
+  <rect x="501" y="389.5" width="84" height="15.5" rx="3" ry="3" fill="#f5f5f5" stroke="none"/>
   <text x="543" y="400" font-size="10.5" font-weight="400" fill="#e36209" text-anchor="middle">order.created</text>
   <path d="M 780,410 H 940" fill="none" stroke="#e36209" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow-orange)"><animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/></path>
-  <rect x="835" y="389.5" width="49" height="15.5" rx="3" ry="3" fill="#ffffff" stroke="none"/>
+  <rect x="835" y="389.5" width="49" height="15.5" rx="3" ry="3" fill="#f5f5f5" stroke="none"/>
   <text x="860" y="400" font-size="10.5" font-weight="400" fill="#e36209" text-anchor="middle">consume</text>
   <path d="M 940,490 H 780" fill="none" stroke="#e36209" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow-orange)"><animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/></path>
-  <rect x="815" y="469.5" width="90" height="15.5" rx="3" ry="3" fill="#ffffff" stroke="none"/>
+  <rect x="815" y="469.5" width="90" height="15.5" rx="3" ry="3" fill="#f5f5f5" stroke="none"/>
   <text x="860" y="480" font-size="10.5" font-weight="400" fill="#e36209" text-anchor="middle">publish result</text>
   <path d="M 620,490 H 490" fill="none" stroke="#e36209" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow-orange)"><animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/></path>
-  <rect x="504" y="469.5" width="79" height="15.5" rx="3" ry="3" fill="#ffffff" stroke="none"/>
+  <rect x="504" y="469.5" width="79" height="15.5" rx="3" ry="3" fill="#f5f5f5" stroke="none"/>
   <text x="543" y="480" font-size="10.5" font-weight="400" fill="#e36209" text-anchor="middle">stock.result</text>
   <path d="M 380,520 V 620" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow)"><animate attributeName="stroke-dashoffset" values="14;0" dur="0.8s" repeatCount="indefinite"/></path>
   <text x="392" y="575" font-size="10.5" font-weight="400" fill="#444444" text-anchor="start">SQL</text>
@@ -137,6 +137,6 @@
   <!-- ============ DEMO CONTROLS ============ -->
   <path d="M 105,480 V 572 H 300 V 520" fill="none" stroke="#b91c1c" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow-red)"><animate attributeName="stroke-dashoffset" values="14;0" dur="1.2s" repeatCount="indefinite"/></path>
   <path d="M 105,480 V 592 H 1000 V 520" fill="none" stroke="#b91c1c" stroke-width="1.8" stroke-dasharray="8,6" marker-end="url(#arrow-red)"><animate attributeName="stroke-dashoffset" values="14;0" dur="1.2s" repeatCount="indefinite"/></path>
-  <rect x="617" y="576.5" width="167" height="15.5" rx="3" ry="3" fill="#ffffff" stroke="none"/>
+  <rect x="617" y="576.5" width="167" height="15.5" rx="3" ry="3" fill="#f5f5f5" stroke="none"/>
   <text x="700" y="587" font-size="10.5" font-weight="400" fill="#b91c1c" text-anchor="middle">docker compose stop / start</text>
 </svg>
