@@ -327,7 +327,7 @@ mkdir -p src/repositories src/services src/controllers src/lib
 
 Configuration comes only from environment variables, so the same image runs anywhere.
 
-Run this command to create `src/config.js`, `src/db.js`, and the three helpers under `src/lib/`:
+Run this command to create `src/config.js`:
 
 ```bash
 cat > src/config.js << 'EOF'
@@ -344,7 +344,11 @@ module.exports = {
 };
 
 EOF
+```
 
+Run this command to create `src/db.js`:
+
+```bash
 cat > src/db.js << 'EOF'
 // src/db.js
 const { Pool, types } = require("pg");
@@ -358,7 +362,11 @@ function createPool(connectionString) {
 module.exports = { createPool };
 
 EOF
+```
 
+Run this command to create `src/lib/errors.js`:
+
+```bash
 cat > src/lib/errors.js << 'EOF'
 // src/lib/errors.js
 class AppError extends Error {
@@ -371,13 +379,21 @@ class AppError extends Error {
 module.exports = { AppError };
 
 EOF
+```
 
+Run this command to create `src/lib/asyncHandler.js`:
+
+```bash
 cat > src/lib/asyncHandler.js << 'EOF'
 // src/lib/asyncHandler.js: forwards async errors to the Express error handler
 module.exports = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 EOF
+```
 
+Run this command to create `src/lib/validate.js`:
+
+```bash
 cat > src/lib/validate.js << 'EOF'
 // src/lib/validate.js
 const { AppError } = require("./errors");
@@ -402,7 +418,7 @@ EOF
 
 Repositories contain SQL and nothing else. They receive the database handle as a parameter.
 
-Run this command to create the three repository files:
+Run this command to create `src/repositories/userRepository.js`:
 
 ```bash
 cat > src/repositories/userRepository.js << 'EOF'
@@ -432,7 +448,11 @@ function createUserRepository({ db }) {
 module.exports = { createUserRepository };
 
 EOF
+```
 
+Run this command to create `src/repositories/productRepository.js`:
+
+```bash
 cat > src/repositories/productRepository.js << 'EOF'
 // src/repositories/productRepository.js
 function createProductRepository({ db }) {
@@ -461,7 +481,11 @@ function createProductRepository({ db }) {
 module.exports = { createProductRepository };
 
 EOF
+```
 
+Run this command to create `src/repositories/orderRepository.js`:
+
+```bash
 cat > src/repositories/orderRepository.js << 'EOF'
 // src/repositories/orderRepository.js
 function createOrderRepository({ db }) {
@@ -492,7 +516,7 @@ EOF
 
 Services hold the business rules. They know nothing about HTTP or SQL.
 
-Run this command to create the three service files:
+Run this command to create `src/services/userService.js`:
 
 ```bash
 cat > src/services/userService.js << 'EOF'
@@ -522,7 +546,11 @@ function createUserService({ userRepository }) {
 module.exports = { createUserService };
 
 EOF
+```
 
+Run this command to create `src/services/productService.js`:
+
+```bash
 cat > src/services/productService.js << 'EOF'
 // src/services/productService.js
 const { AppError } = require("../lib/errors");
@@ -552,7 +580,11 @@ function createProductService({ productRepository }) {
 module.exports = { createProductService };
 
 EOF
+```
 
+Run this command to create `src/services/orderService.js`:
+
+```bash
 cat > src/services/orderService.js << 'EOF'
 // src/services/orderService.js
 const { AppError } = require("../lib/errors");
@@ -597,7 +629,7 @@ EOF
 
 Controllers translate HTTP into service calls and back. They contain no rules.
 
-Run this command to create the three controller files:
+Run this command to create `src/controllers/userController.js`:
 
 ```bash
 cat > src/controllers/userController.js << 'EOF'
@@ -616,7 +648,11 @@ function createUserController({ userService }) {
 module.exports = { createUserController };
 
 EOF
+```
 
+Run this command to create `src/controllers/productController.js`:
+
+```bash
 cat > src/controllers/productController.js << 'EOF'
 // src/controllers/productController.js
 const express = require("express");
@@ -633,7 +669,11 @@ function createProductController({ productService }) {
 module.exports = { createProductController };
 
 EOF
+```
 
+Run this command to create `src/controllers/orderController.js`:
+
+```bash
 cat > src/controllers/orderController.js << 'EOF'
 // src/controllers/orderController.js
 const express = require("express");
@@ -656,7 +696,7 @@ EOF
 
 `container.js` is the only file that knows which concrete object feeds which layer. This is dependency injection by constructor, with no framework.
 
-Run this command to create `src/app.js`, `src/container.js`, and `src/server.js`:
+Run this command to create `src/app.js`:
 
 ```bash
 cat > src/app.js << 'EOF'
@@ -684,7 +724,11 @@ function createApp({ mounts }) {
 module.exports = { createApp };
 
 EOF
+```
 
+Run this command to create `src/container.js`:
+
+```bash
 cat > src/container.js << 'EOF'
 // src/container.js: the composition root
 const config = require("./config");
@@ -725,7 +769,11 @@ function buildContainer() {
 module.exports = { buildContainer };
 
 EOF
+```
 
+Run this command to create `src/server.js`:
+
+```bash
 cat > src/server.js << 'EOF'
 // src/server.js: starts the app and shuts down cleanly on SIGTERM
 const config = require("./config");
@@ -812,7 +860,11 @@ The new `src/server.js` is already visible inside the container through the moun
 
 ```bash
 docker compose restart app
+sleep 3
+docker compose logs app --tail 3
 ```
+
+The last log line reads `listening on 3100`.
 
 <p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-1/images/Step%2017%20Restart%20the%20app%20with%20the%20layered%20code.png" alt="docker compose restart app"></p>
 
