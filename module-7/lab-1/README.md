@@ -28,7 +28,7 @@ A shop API with users, products, and orders on Node.js, Express, and PostgreSQL.
 ## Prerequisites
 
 - Docker and Docker Compose v2 on the lab VM. Node.js runs only inside the containers, so the host needs no Node.js.
-- Port `3000` free on the VM.
+- Port `3100` free on the VM.
 
 ## Step 1: Create the project directory
 
@@ -149,13 +149,13 @@ services:
     container_name: shop-app
     command: node src/server.js
     ports:
-      - "3000:3000"
+      - "3100:3100"
     volumes:
       - ./src:/app/src
       - ./test:/app/test
     working_dir: /app
     environment:
-      PORT: "3000"
+      PORT: "3100"
       DATABASE_URL: postgres://postgres:postgres@db:5432/shop
     depends_on:
       db:
@@ -253,7 +253,7 @@ app.get("/orders", async (req, res) => {
   res.json(rows);
 });
 
-app.listen(3000, () => console.log("monolith listening on 3000"));
+app.listen(3100, () => console.log("monolith listening on 3100"));
 
 EOF
 ```
@@ -265,7 +265,7 @@ Run this command to create `smoke.sh`. The same script runs before and after the
 ```bash
 cat > smoke.sh << 'EOF'
 #!/usr/bin/env bash
-BASE=${1:-http://localhost:3000}
+BASE=${1:-http://localhost:3100}
 JSON="Content-Type: application/json"
 
 call() {
@@ -339,7 +339,7 @@ function required(name) {
 }
 
 module.exports = {
-  port: Number(process.env.PORT || 3000),
+  port: Number(process.env.PORT || 3100),
   databaseUrl: required("DATABASE_URL"),
 };
 

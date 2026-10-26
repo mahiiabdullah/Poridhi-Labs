@@ -424,7 +424,7 @@ function required(name) {
 }
 
 module.exports = {
-  port: Number(process.env.PORT || 3000),
+  port: Number(process.env.PORT || 3100),
   databaseUrl: required("DATABASE_URL"),
 };
 
