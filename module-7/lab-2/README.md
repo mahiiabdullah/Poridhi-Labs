@@ -43,7 +43,7 @@ docker --version
 docker compose version
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Step%202%20Confirm%20Docker%20and%20Docker%20Compose%20are%20installed.png" alt="Docker and Docker Compose versions"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Docker%20and%20Docker%20Compose%20versions.png" alt="Docker and Docker Compose versions"></p>
 
 ## Step 3: Create the common files
 
@@ -204,7 +204,7 @@ The order service gets its own `config.js` in Step 8 because it also needs the a
 find . -type f | LC_ALL=C sort
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Step%203%20Create%20the%20common%20files.png" alt="Common files per service"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Common%20files%20per%20service.png" alt="Common files per service"></p>
 
 ## Step 4: Create the package files
 
@@ -802,57 +802,7 @@ If the heredoc gets mangled by your terminal, run `wc -l docker-compose.yml` aft
 find ~/shop-services -type f | LC_ALL=C sort
 ```
 
-Expected output:
-
-```
-/home/poridhian/shop-services/docker-compose.yml
-/home/poridhian/shop-services/order-service/Dockerfile
-/home/poridhian/shop-services/order-service/db/init.sql
-/home/poridhian/shop-services/order-service/package.json
-/home/poridhian/shop-services/order-service/src/app.js
-/home/poridhian/shop-services/order-service/src/clients/productClient.js
-/home/poridhian/shop-services/order-service/src/clients/userClient.js
-/home/poridhian/shop-services/order-service/src/config.js
-/home/poridhian/shop-services/order-service/src/container.js
-/home/poridhian/shop-services/order-service/src/controllers/orderController.js
-/home/poridhian/shop-services/order-service/src/db.js
-/home/poridhian/shop-services/order-service/src/lib/asyncHandler.js
-/home/poridhian/shop-services/order-service/src/lib/errors.js
-/home/poridhian/shop-services/order-service/src/lib/validate.js
-/home/poridhian/shop-services/order-service/src/repositories/orderRepository.js
-/home/poridhian/shop-services/order-service/src/server.js
-/home/poridhian/shop-services/order-service/src/services/orderService.js
-/home/poridhian/shop-services/product-service/Dockerfile
-/home/poridhian/shop-services/product-service/db/init.sql
-/home/poridhian/shop-services/product-service/package.json
-/home/poridhian/shop-services/product-service/src/app.js
-/home/poridhian/shop-services/product-service/src/config.js
-/home/poridhian/shop-services/product-service/src/container.js
-/home/poridhian/shop-services/product-service/src/controllers/productController.js
-/home/poridhian/shop-services/product-service/src/db.js
-/home/poridhian/shop-services/product-service/src/lib/asyncHandler.js
-/home/poridhian/shop-services/product-service/src/lib/errors.js
-/home/poridhian/shop-services/product-service/src/lib/validate.js
-/home/poridhian/shop-services/product-service/src/repositories/productRepository.js
-/home/poridhian/shop-services/product-service/src/server.js
-/home/poridhian/shop-services/product-service/src/services/productService.js
-/home/poridhian/shop-services/user-service/Dockerfile
-/home/poridhian/shop-services/user-service/db/init.sql
-/home/poridhian/shop-services/user-service/package.json
-/home/poridhian/shop-services/user-service/src/app.js
-/home/poridhian/shop-services/user-service/src/config.js
-/home/poridhian/shop-services/user-service/src/container.js
-/home/poridhian/shop-services/user-service/src/controllers/userController.js
-/home/poridhian/shop-services/user-service/src/db.js
-/home/poridhian/shop-services/user-service/src/lib/asyncHandler.js
-/home/poridhian/shop-services/user-service/src/lib/errors.js
-/home/poridhian/shop-services/user-service/src/lib/validate.js
-/home/poridhian/shop-services/user-service/src/repositories/userRepository.js
-/home/poridhian/shop-services/user-service/src/server.js
-/home/poridhian/shop-services/user-service/src/services/userService.js
-```
-
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Step%2010%20Verify%20the%20file%20layout.png" alt="File layout"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/File%20layout.png" alt="File layout"></p>
 
 ## Step 11: Build and start the stack
 
@@ -860,7 +810,7 @@ Expected output:
 docker compose up -d --build
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Step%2011%20Build%20and%20start%20the%20stack_1.png" alt="docker compose up"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/docker%20compose%20up.png" alt="docker compose up"></p>
 
 ```bash
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
@@ -868,7 +818,7 @@ docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
 Six containers run: three databases and three services. The databases show `healthy`.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Step%2011%20Build%20and%20start%20the%20stack_2.png" alt="Container status table"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Container%20status%20table.png" alt="Container status table"></p>
 
 ## Step 12: Check each service health endpoint
 
@@ -876,15 +826,9 @@ Six containers run: three databases and three services. The databases show `heal
 for port in 3001 3002 3003; do curl -s localhost:$port/health; echo; done
 ```
 
-Each service answers on its own port:
+Each service answers on its own port.
 
-```
-{"status":"ok"}
-{"status":"ok"}
-{"status":"ok"}
-```
-
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Step%2012%20Check%20each%20service%20health%20endpoint.png" alt="Health endpoints"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Health%20endpoints.png" alt="Health endpoints"></p>
 
 ## Step 13: Test the order flow across services
 
@@ -916,7 +860,7 @@ chmod +x smoke.sh
 
 The order returns `201` with `total` 99. The oversized order returns `409`, and the unknown user returns `404`.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Step%2013%20Test%20the%20order%20flow%20across%20services.png" alt="Order flow smoke test"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Order%20flow%20smoke%20test.png" alt="Order flow smoke test"></p>
 
 ## Step 14: Confirm the order reduced stock in the product service
 
@@ -928,7 +872,7 @@ curl -s localhost:3002/products/1
 
 `stock` dropped from 100 to 98.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Step%2014%20Confirm%20the%20order%20reduced%20stock%20in%20the%20product%20service.png" alt="Product stock after the order"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Product%20stock%20after%20the%20order.png" alt="Product stock after the order"></p>
 
 ## Step 15: Confirm each database holds only its own tables
 
@@ -940,7 +884,7 @@ docker compose exec order-db psql -U postgres -d orders -c "\dt"
 
 The three databases list `users`, `products`, and `orders` respectively. No database can join across services.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Step%2015%20Confirm%20each%20database%20holds%20only%20its%20own%20tables.png" alt="Tables per database"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Tables%20per%20database.png" alt="Tables per database"></p>
 
 ## Step 16: Send invalid input
 
@@ -950,14 +894,9 @@ curl -s -w "\nHTTP %{http_code}\n" -X POST localhost:3003/orders \
   -d '{"userId":1}'
 ```
 
-The order service rejects the request before it calls any other service:
+The order service rejects the request before it calls any other service.
 
-```
-{"error":"productId must be a positive integer"}
-HTTP 400
-```
-
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Step%2016%20Send%20invalid%20input.png" alt="Validation error response"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Validation%20error%20response.png" alt="Validation error response"></p>
 
 ## Step 17: Observe what a service outage does
 
@@ -972,7 +911,7 @@ curl -s -w "\nHTTP %{http_code}\n" -X POST localhost:3003/orders \
 
 The order service returns a generic `500`. It has no timeout, no retry, and no way to tell the client that the user service is down.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Step%2017%20Observe%20what%20a%20service%20outage%20does.png" alt="Order response while user-service is down"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Order%20response%20while%20user-service%20is%20down.png" alt="Order response while user-service is down"></p>
 
 Start the user service again:
 
@@ -986,7 +925,7 @@ docker compose start user-service
 docker compose down
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Step%2018%20Stop%20the%20stack.png" alt="docker compose down"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/docker%20compose%20down.png" alt="docker compose down"></p>
 
 Add `-v` to also remove the database volumes for a clean slate:
 

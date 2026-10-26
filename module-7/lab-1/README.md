@@ -295,7 +295,7 @@ chmod +x smoke.sh
 docker compose up -d --build
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-1/images/Step%208%20Start%20the%20monolith_1.png" alt="docker compose up"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-1/images/Step%208%20Start%20the%20monolith%20--build.png" alt="docker compose up"></p>
 
 ```bash
 docker compose ps
@@ -303,7 +303,7 @@ docker compose ps
 
 `shop-db` shows `healthy` and `shop-app` shows `running`.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-1/images/Step%208%20Start%20the%20monolith_2.png" alt="docker compose ps"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-1/images/Step%208%20Start%20the%20monolith%20ps.png" alt="docker compose ps"></p>
 
 ## Step 9: Record the baseline behavior
 
@@ -866,8 +866,6 @@ docker compose logs app --tail 3
 
 The last log line reads `listening on 3100`.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-1/images/Step%2017%20Restart%20the%20app%20with%20the%20layered%20code.png" alt="docker compose restart app"></p>
-
 ## Step 18: Run the smoke test again
 
 ```bash
@@ -924,36 +922,6 @@ EOF
 
 ```bash
 find ~/layered-shop -type f | LC_ALL=C sort
-```
-
-Expected output:
-
-```
-/home/poridhian/layered-shop/Dockerfile
-/home/poridhian/layered-shop/db/init.sql
-/home/poridhian/layered-shop/docker-compose.yml
-/home/poridhian/layered-shop/docs/dependencies.md
-/home/poridhian/layered-shop/legacy/monolith-server.js
-/home/poridhian/layered-shop/package.json
-/home/poridhian/layered-shop/smoke.sh
-/home/poridhian/layered-shop/src/app.js
-/home/poridhian/layered-shop/src/config.js
-/home/poridhian/layered-shop/src/container.js
-/home/poridhian/layered-shop/src/controllers/orderController.js
-/home/poridhian/layered-shop/src/controllers/productController.js
-/home/poridhian/layered-shop/src/controllers/userController.js
-/home/poridhian/layered-shop/src/db.js
-/home/poridhian/layered-shop/src/lib/asyncHandler.js
-/home/poridhian/layered-shop/src/lib/errors.js
-/home/poridhian/layered-shop/src/lib/validate.js
-/home/poridhian/layered-shop/src/repositories/orderRepository.js
-/home/poridhian/layered-shop/src/repositories/productRepository.js
-/home/poridhian/layered-shop/src/repositories/userRepository.js
-/home/poridhian/layered-shop/src/server.js
-/home/poridhian/layered-shop/src/services/orderService.js
-/home/poridhian/layered-shop/src/services/productService.js
-/home/poridhian/layered-shop/src/services/userService.js
-/home/poridhian/layered-shop/test/orderService.test.js
 ```
 
 <p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-1/images/Step%2021%20Verify%20the%20file%20layout.png" alt="File layout"></p>
