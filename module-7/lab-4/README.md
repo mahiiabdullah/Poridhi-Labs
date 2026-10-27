@@ -45,7 +45,7 @@ docker --version
 docker compose version
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Step%202%20Confirm%20Docker%20and%20Docker%20Compose%20are%20installed.png" alt="Docker and Docker Compose versions"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Docker%20and%20Docker%20Compose%20versions.png" alt="Docker and Docker Compose versions"></p>
 
 ## Step 3: Create the shared library
 
@@ -207,7 +207,7 @@ ls shared
 
 `rabbit.js` loads `amqplib` from the `node_modules` of the service that imports it, so `shared/package.json` declares no dependencies.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Step%203%20Create%20the%20shared%20library.png" alt="Shared library files"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Shared%20library%20files.png" alt="Shared library files"></p>
 
 ## Step 4: Create the common service files
 
@@ -1006,54 +1006,7 @@ If the heredoc gets mangled by your terminal, run `wc -l docker-compose.yml` aft
 find ~/shop-stack -type f | LC_ALL=C sort
 ```
 
-Expected output:
-
-```
-/home/poridhian/shop-stack/docker-compose.yml
-/home/poridhian/shop-stack/order-service/Dockerfile
-/home/poridhian/shop-stack/order-service/db/init.sql
-/home/poridhian/shop-stack/order-service/package.json
-/home/poridhian/shop-stack/order-service/src/app.js
-/home/poridhian/shop-stack/order-service/src/clients/userClient.js
-/home/poridhian/shop-stack/order-service/src/config.js
-/home/poridhian/shop-stack/order-service/src/container.js
-/home/poridhian/shop-stack/order-service/src/controllers/orderController.js
-/home/poridhian/shop-stack/order-service/src/db.js
-/home/poridhian/shop-stack/order-service/src/repositories/orderRepository.js
-/home/poridhian/shop-stack/order-service/src/server.js
-/home/poridhian/shop-stack/order-service/src/services/orderService.js
-/home/poridhian/shop-stack/product-service/Dockerfile
-/home/poridhian/shop-stack/product-service/db/init.sql
-/home/poridhian/shop-stack/product-service/package.json
-/home/poridhian/shop-stack/product-service/src/app.js
-/home/poridhian/shop-stack/product-service/src/config.js
-/home/poridhian/shop-stack/product-service/src/container.js
-/home/poridhian/shop-stack/product-service/src/controllers/productController.js
-/home/poridhian/shop-stack/product-service/src/db.js
-/home/poridhian/shop-stack/product-service/src/repositories/productRepository.js
-/home/poridhian/shop-stack/product-service/src/server.js
-/home/poridhian/shop-stack/product-service/src/services/productService.js
-/home/poridhian/shop-stack/shared/asyncHandler.js
-/home/poridhian/shop-stack/shared/errors.js
-/home/poridhian/shop-stack/shared/events.js
-/home/poridhian/shop-stack/shared/httpClient.js
-/home/poridhian/shop-stack/shared/package.json
-/home/poridhian/shop-stack/shared/rabbit.js
-/home/poridhian/shop-stack/shared/validate.js
-/home/poridhian/shop-stack/user-service/Dockerfile
-/home/poridhian/shop-stack/user-service/db/init.sql
-/home/poridhian/shop-stack/user-service/package.json
-/home/poridhian/shop-stack/user-service/src/app.js
-/home/poridhian/shop-stack/user-service/src/config.js
-/home/poridhian/shop-stack/user-service/src/container.js
-/home/poridhian/shop-stack/user-service/src/controllers/userController.js
-/home/poridhian/shop-stack/user-service/src/db.js
-/home/poridhian/shop-stack/user-service/src/repositories/userRepository.js
-/home/poridhian/shop-stack/user-service/src/server.js
-/home/poridhian/shop-stack/user-service/src/services/userService.js
-```
-
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Step%2010%20Verify%20the%20file%20layout.png" alt="File layout"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/File%20layout.png" alt="File layout"></p>
 
 ## Step 11: Build and start the stack
 
@@ -1063,7 +1016,7 @@ Expected output:
 docker compose up -d --build --wait
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Step%2011%20Build%20and%20start%20the%20stack_1.png" alt="docker compose up"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/docker%20compose%20up.png" alt="docker compose up"></p>
 
 ```bash
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
@@ -1071,7 +1024,7 @@ docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
 Seven containers run: RabbitMQ, three databases, and three services.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Step%2011%20Build%20and%20start%20the%20stack_2.png" alt="Container status table"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Container%20status%20table.png" alt="Container status table"></p>
 
 ## Step 12: Check each service health endpoint
 
@@ -1080,15 +1033,9 @@ sleep 5
 for port in 3001 3002 3003; do curl -s localhost:$port/health; echo; done
 ```
 
-Each service answers on its own port, which confirms that every import of `shop-shared` resolved:
+Each service answers on its own port, which confirms that every import of `shop-shared` resolved.
 
-```
-{"status":"ok"}
-{"status":"ok"}
-{"status":"ok"}
-```
-
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Step%2012%20Check%20each%20service%20health%20endpoint.png" alt="Health endpoints"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Health%20endpoints.png" alt="Health endpoints"></p>
 
 ## Step 13: Document the service dependencies
 
@@ -1204,7 +1151,7 @@ chmod +x demo.sh
 
 All five checks print `PASS`. Scenario 3 stops both services in the chain and still ends with a confirmed order, because the result waited in a durable queue.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Step%2015%20Run%20the%20demo.png" alt="Demo output with PASS lines"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Demo%20output%20with%20PASS%20lines.png" alt="Demo output with PASS lines"></p>
 
 ## Step 16: Confirm the queues drained
 
@@ -1214,7 +1161,7 @@ docker compose exec rabbitmq rabbitmqctl list_queues name messages
 
 Both queues show `0` messages.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Step%2016%20Confirm%20the%20queues%20drained.png" alt="Queue message counts"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Queue%20message%20counts.png" alt="Queue message counts"></p>
 
 ## Step 17: Send invalid input
 
@@ -1224,14 +1171,9 @@ curl -s -w "\nHTTP %{http_code}\n" -X POST localhost:3003/orders \
   -d '{"userId":1,"productId":1}'
 ```
 
-The request is rejected before any service is called:
+The request is rejected before any service is called.
 
-```
-{"error":"quantity must be a positive integer"}
-HTTP 400
-```
-
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Step%2017%20Send%20invalid%20input.png" alt="Validation error response"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Validation%20error%20response.png" alt="Validation error response"></p>
 
 ## Step 18: Stop the stack
 
@@ -1239,7 +1181,7 @@ HTTP 400
 docker compose down
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Step%2018%20Stop%20the%20stack.png" alt="docker compose down"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/docker%20compose%20down.png" alt="docker compose down"></p>
 
 Add `-v` to also remove the database volumes for a clean slate:
 
