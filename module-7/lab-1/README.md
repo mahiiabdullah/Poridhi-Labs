@@ -6,7 +6,7 @@ A flat Express app mixes routing, business rules, and SQL in one file. That is q
 
 ## Architecture
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-1/images/architecture.svg" alt="Architecture"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-01/images/architecture.svg" alt="Architecture"></p>
 
 ## Concept
 
@@ -44,7 +44,7 @@ docker --version
 docker compose version
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-1/images/Step%202%20Confirm%20Docker%20and%20Docker%20Compose%20are%20installed.png" alt="Docker and Docker Compose versions"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-01/images/Step%202%20Confirm%20Docker%20and%20Docker%20Compose%20are%20installed.png" alt="Docker and Docker Compose versions"></p>
 
 ## Step 3: Create the package file and Dockerfile
 
@@ -295,7 +295,7 @@ chmod +x smoke.sh
 docker compose up -d --build
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-1/images/Step%208%20Start%20the%20monolith%20--build.png" alt="docker compose up"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-01/images/Step%208%20Start%20the%20monolith%20--build.png" alt="docker compose up"></p>
 
 ```bash
 docker compose ps
@@ -303,7 +303,7 @@ docker compose ps
 
 `shop-db` shows `healthy` and `shop-app` shows `running`.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-1/images/Step%208%20Start%20the%20monolith%20ps.png" alt="docker compose ps"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-01/images/Step%208%20Start%20the%20monolith%20ps.png" alt="docker compose ps"></p>
 
 ## Step 9: Record the baseline behavior
 
@@ -313,7 +313,7 @@ docker compose ps
 
 Note the status codes in order: `200`, `201`, `201`, `200`, `201`, `409`, `404`, `400`, `200`. The refactor must reproduce them.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-1/images/Step%209%20Record%20the%20baseline%20behavior.png" alt="Smoke test baseline output"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-01/images/Step%209%20Record%20the%20baseline%20behavior.png" alt="Smoke test baseline output"></p>
 
 ## Step 10: Move the monolith aside
 
@@ -874,7 +874,7 @@ The last log line reads `listening on 3100`.
 
 The status codes match Step 9. The structure changed and the behavior did not. The `400` from the user without an email now comes from `requireString` in the service layer instead of an inline check.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-1/images/Step%2018%20Run%20the%20smoke%20test%20again.png" alt="Smoke test after the refactor"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-01/images/Step%2018%20Run%20the%20smoke%20test%20again.png" alt="Smoke test after the refactor"></p>
 
 ## Step 19: Run the unit tests
 
@@ -884,7 +884,7 @@ docker compose exec app node --test test/orderService.test.js
 
 Three tests pass without touching PostgreSQL.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-1/images/Step%2019%20Run%20the%20unit%20tests.png" alt="Unit test results"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-01/images/Step%2019%20Run%20the%20unit%20tests.png" alt="Unit test results"></p>
 
 ## Step 20: Document the dependency direction
 
@@ -924,7 +924,7 @@ EOF
 find ~/layered-shop -type f | LC_ALL=C sort
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-1/images/Step%2021%20Verify%20the%20file%20layout.png" alt="File layout"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-01/images/Step%2021%20Verify%20the%20file%20layout.png" alt="File layout"></p>
 
 ## Step 22: Stop the stack
 
@@ -932,7 +932,7 @@ find ~/layered-shop -type f | LC_ALL=C sort
 docker compose down
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-1/images/Step%2022%20Stop%20the%20stack.png" alt="docker compose down"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-01/images/Step%2022%20Stop%20the%20stack.png" alt="docker compose down"></p>
 
 Add `-v` to also remove the database volumes for a clean slate:
 

@@ -6,7 +6,7 @@ This lab builds one production-shaped stack. Three layered services each own a d
 
 ## Architecture
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/architecture.svg" alt="Architecture"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-04/images/architecture.svg" alt="Architecture"></p>
 
 ## Concept
 
@@ -45,7 +45,7 @@ docker --version
 docker compose version
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Docker%20and%20Docker%20Compose%20versions.png" alt="Docker and Docker Compose versions"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-04/images/Docker%20and%20Docker%20Compose%20versions.png" alt="Docker and Docker Compose versions"></p>
 
 ## Step 3: Create the shared library
 
@@ -207,7 +207,7 @@ ls shared
 
 `rabbit.js` loads `amqplib` from the `node_modules` of the service that imports it, so `shared/package.json` declares no dependencies.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Shared%20library%20files.png" alt="Shared library files"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-04/images/Shared%20library%20files.png" alt="Shared library files"></p>
 
 ## Step 4: Create the common service files
 
@@ -1006,7 +1006,7 @@ If the heredoc gets mangled by your terminal, run `wc -l docker-compose.yml` aft
 find ~/shop-stack -type f | LC_ALL=C sort
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/File%20layout.png" alt="File layout"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-04/images/File%20layout.png" alt="File layout"></p>
 
 ## Step 11: Build and start the stack
 
@@ -1016,7 +1016,7 @@ find ~/shop-stack -type f | LC_ALL=C sort
 docker compose up -d --build --wait
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/docker%20compose%20up.png" alt="docker compose up"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-04/images/docker%20compose%20up.png" alt="docker compose up"></p>
 
 ```bash
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
@@ -1024,7 +1024,7 @@ docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
 Seven containers run: RabbitMQ, three databases, and three services.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Container%20status%20table.png" alt="Container status table"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-04/images/Container%20status%20table.png" alt="Container status table"></p>
 
 ## Step 12: Check each service health endpoint
 
@@ -1035,7 +1035,7 @@ for port in 3001 3002 3003; do curl -s localhost:$port/health; echo; done
 
 Each service answers on its own port, which confirms that every import of `shop-shared` resolved.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Health%20endpoints.png" alt="Health endpoints"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-04/images/Health%20endpoints.png" alt="Health endpoints"></p>
 
 ## Step 13: Document the service dependencies
 
@@ -1151,7 +1151,7 @@ chmod +x demo.sh
 
 All five checks print `PASS`. Scenario 3 stops both services in the chain and still ends with a confirmed order, because the result waited in a durable queue.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Demo%20output%20with%20PASS%20lines.png" alt="Demo output with PASS lines"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-04/images/Demo%20output%20with%20PASS%20lines.png" alt="Demo output with PASS lines"></p>
 
 ## Step 16: Confirm the queues drained
 
@@ -1161,7 +1161,7 @@ docker compose exec rabbitmq rabbitmqctl list_queues name messages
 
 Both queues show `0` messages.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Queue%20message%20counts.png" alt="Queue message counts"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-04/images/Queue%20message%20counts.png" alt="Queue message counts"></p>
 
 ## Step 17: Send invalid input
 
@@ -1173,7 +1173,7 @@ curl -s -w "\nHTTP %{http_code}\n" -X POST localhost:3003/orders \
 
 The request is rejected before any service is called.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/Validation%20error%20response.png" alt="Validation error response"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-04/images/Validation%20error%20response.png" alt="Validation error response"></p>
 
 ## Step 18: Stop the stack
 
@@ -1181,7 +1181,7 @@ The request is rejected before any service is called.
 docker compose down
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-4/images/docker%20compose%20down.png" alt="docker compose down"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-04/images/docker%20compose%20down.png" alt="docker compose down"></p>
 
 Add `-v` to also remove the database volumes for a clean slate:
 

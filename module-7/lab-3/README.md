@@ -6,7 +6,7 @@ Services that call each other directly fail together. This lab connects three sh
 
 ## Architecture
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-3/images/architecture.svg" alt="Architecture"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-03/images/architecture.svg" alt="Architecture"></p>
 
 ## Concept
 
@@ -47,7 +47,7 @@ docker --version
 docker compose version
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-3/images/Docker%20and%20Docker%20Compose%20versions.png" alt="Docker and Docker Compose versions"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-03/images/Docker%20and%20Docker%20Compose%20versions.png" alt="Docker and Docker Compose versions"></p>
 
 ## Step 3: Create the common files
 
@@ -1026,7 +1026,7 @@ If the heredoc gets mangled by your terminal, run `wc -l docker-compose.yml` aft
 find ~/shop-messaging -type f | LC_ALL=C sort
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-3/images/File%20layout.png" alt="File layout"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-03/images/File%20layout.png" alt="File layout"></p>
 
 ## Step 12: Build and start the stack
 
@@ -1034,7 +1034,7 @@ find ~/shop-messaging -type f | LC_ALL=C sort
 docker compose up -d --build
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-3/images/docker%20compose%20up.png" alt="docker compose up"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-03/images/docker%20compose%20up.png" alt="docker compose up"></p>
 
 ```bash
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
@@ -1042,7 +1042,7 @@ docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
 Seven containers run: RabbitMQ, three databases, and three services. RabbitMQ and the databases show `healthy`.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-3/images/Container%20status%20table.png" alt="Container status table"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-03/images/Container%20status%20table.png" alt="Container status table"></p>
 
 ## Step 13: Open the Load Balancer modal in the lab UI
 
@@ -1054,7 +1054,7 @@ hostname -I
 
 Use the first IP printed as `LB_IP`. Open the Load Balancer modal.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-3/images/hostname%20-I.png" alt="hostname -I"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-03/images/hostname%20-I.png" alt="hostname -I"></p>
 
 Expose one port:
 
@@ -1064,7 +1064,7 @@ Expose one port:
 
 Click **Expose**. Click the generated `.lb.poridhi.io` URL to open the RabbitMQ Management UI in a new tab. Sign in with `guest` / `guest`, then click **Queues**. Both `order.created` and `stock.result` appear with the green **D** badge, which means durable. They are created when the services start.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-3/images/Expose%20port%2015672.png" alt="Expose port 15672"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-03/images/Expose%20port%2015672.png" alt="Expose port 15672"></p>
 
 ## Step 14: Place an order through the asynchronous path
 
@@ -1076,7 +1076,7 @@ curl -s -w "\nHTTP %{http_code}\n" -X POST localhost:3003/orders \
 
 The response is `202` with `"status":"PENDING"` and `"total":null`. The order is accepted but not yet confirmed.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-3/images/Order%20accepted%20with%20202.png" alt="Order accepted with 202"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-03/images/Order%20accepted%20with%20202.png" alt="Order accepted with 202"></p>
 
 Read the order again after two seconds:
 
@@ -1087,7 +1087,7 @@ curl -s localhost:3003/orders/1
 
 The status is now `CONFIRMED` and the total is `99`.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-3/images/Order%20confirmed.png" alt="Order confirmed"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-03/images/Order%20confirmed.png" alt="Order confirmed"></p>
 
 ```bash
 docker compose logs product-service order-service | grep "\->"
@@ -1095,7 +1095,7 @@ docker compose logs product-service order-service | grep "\->"
 
 The logs show the product service reserving stock and the order service applying the result.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-3/images/Reservation%20logs.png" alt="Reservation logs"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-03/images/Reservation%20logs.png" alt="Reservation logs"></p>
 
 ## Step 15: Place an order that cannot be fulfilled
 
@@ -1109,7 +1109,7 @@ curl -s localhost:3003/orders/2
 
 The second order ends as `REJECTED`.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-3/images/Rejected%20order.png" alt="Rejected order"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-03/images/Rejected%20order.png" alt="Rejected order"></p>
 
 ## Step 16: Trigger the retry on a failing dependency
 
@@ -1160,7 +1160,7 @@ docker compose exec rabbitmq rabbitmqctl list_queues name messages
 
 `order.created` holds one waiting message.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-3/images/Message%20waiting%20in%20order.created.png" alt="Message waiting in order.created"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-03/images/Message%20waiting%20in%20order.created.png" alt="Message waiting in order.created"></p>
 
 Start the product service and read the orders:
 
@@ -1172,7 +1172,7 @@ curl -s localhost:3003/orders
 
 The waiting message was processed and the last order changed from `PENDING` to `CONFIRMED`.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-3/images/Order%20confirmed%20after%20restart.png" alt="Order confirmed after restart"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-03/images/Order%20confirmed%20after%20restart.png" alt="Order confirmed after restart"></p>
 
 ## Step 18: Compare with a synchronous dependency outage
 
@@ -1188,7 +1188,7 @@ docker compose start user-service
 
 The response is `503` with `user-service is unavailable` after three retries. The client gets a clear error, and no order is stored.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-3/images/503%20while%20user-service%20is%20down.png" alt="503 while user-service is down"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-03/images/503%20while%20user-service%20is%20down.png" alt="503 while user-service is down"></p>
 
 ## Step 19: Send invalid input
 
@@ -1200,7 +1200,7 @@ curl -s -w "\nHTTP %{http_code}\n" -X POST localhost:3003/orders \
 
 The request is rejected before any service is called.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-3/images/Validation%20error%20response.png" alt="Validation error response"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-03/images/Validation%20error%20response.png" alt="Validation error response"></p>
 
 ## Step 20: Stop the stack
 
@@ -1208,7 +1208,7 @@ The request is rejected before any service is called.
 docker compose down
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-3/images/docker%20compose%20down.png" alt="docker compose down"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-03/images/docker%20compose%20down.png" alt="docker compose down"></p>
 
 Add `-v` to also remove the database volumes for a clean slate:
 

@@ -6,7 +6,7 @@ This lab splits a shop API with users, products, and orders into three services.
 
 ## Architecture
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/architecture.svg" alt="Architecture"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-02/images/architecture.svg" alt="Architecture"></p>
 
 ## Concept
 
@@ -43,7 +43,7 @@ docker --version
 docker compose version
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Docker%20and%20Docker%20Compose%20versions.png" alt="Docker and Docker Compose versions"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-02/images/Docker%20and%20Docker%20Compose%20versions.png" alt="Docker and Docker Compose versions"></p>
 
 ## Step 3: Create the common files
 
@@ -204,7 +204,7 @@ The order service gets its own `config.js` in Step 8 because it also needs the a
 find . -type f | LC_ALL=C sort
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Common%20files%20per%20service.png" alt="Common files per service"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-02/images/Common%20files%20per%20service.png" alt="Common files per service"></p>
 
 ## Step 4: Create the package files
 
@@ -802,7 +802,7 @@ If the heredoc gets mangled by your terminal, run `wc -l docker-compose.yml` aft
 find ~/shop-services -type f | LC_ALL=C sort
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/File%20layout.png" alt="File layout"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-02/images/File%20layout.png" alt="File layout"></p>
 
 ## Step 11: Build and start the stack
 
@@ -810,7 +810,7 @@ find ~/shop-services -type f | LC_ALL=C sort
 docker compose up -d --build
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/docker%20compose%20up.png" alt="docker compose up"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-02/images/docker%20compose%20up.png" alt="docker compose up"></p>
 
 ```bash
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
@@ -818,7 +818,7 @@ docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
 Six containers run: three databases and three services. The databases show `healthy`.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Container%20status%20table.png" alt="Container status table"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-02/images/Container%20status%20table.png" alt="Container status table"></p>
 
 ## Step 12: Check each service health endpoint
 
@@ -828,7 +828,7 @@ for port in 3001 3002 3003; do curl -s localhost:$port/health; echo; done
 
 Each service answers on its own port.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Health%20endpoints.png" alt="Health endpoints"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-02/images/Health%20endpoints.png" alt="Health endpoints"></p>
 
 ## Step 13: Test the order flow across services
 
@@ -860,7 +860,7 @@ chmod +x smoke.sh
 
 The order returns `201` with `total` 99. The oversized order returns `409`, and the unknown user returns `404`.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Order%20flow%20smoke%20test.png" alt="Order flow smoke test"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-02/images/Order%20flow%20smoke%20test.png" alt="Order flow smoke test"></p>
 
 ## Step 14: Confirm the order reduced stock in the product service
 
@@ -872,7 +872,7 @@ curl -s localhost:3002/products/1
 
 `stock` dropped from 100 to 98.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Product%20stock%20after%20the%20order.png" alt="Product stock after the order"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-02/images/Product%20stock%20after%20the%20order.png" alt="Product stock after the order"></p>
 
 ## Step 15: Confirm each database holds only its own tables
 
@@ -884,7 +884,7 @@ docker compose exec order-db psql -U postgres -d orders -c "\dt"
 
 The three databases list `users`, `products`, and `orders` respectively. No database can join across services.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Tables%20per%20database.png" alt="Tables per database"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-02/images/Tables%20per%20database.png" alt="Tables per database"></p>
 
 ## Step 16: Send invalid input
 
@@ -896,7 +896,7 @@ curl -s -w "\nHTTP %{http_code}\n" -X POST localhost:3003/orders \
 
 The order service rejects the request before it calls any other service.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Validation%20error%20response.png" alt="Validation error response"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-02/images/Validation%20error%20response.png" alt="Validation error response"></p>
 
 ## Step 17: Observe what a service outage does
 
@@ -911,7 +911,7 @@ curl -s -w "\nHTTP %{http_code}\n" -X POST localhost:3003/orders \
 
 The order service returns a generic `500`. It has no timeout, no retry, and no way to tell the client that the user service is down.
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/Order%20response%20while%20user-service%20is%20down.png" alt="Order response while user-service is down"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-02/images/Order%20response%20while%20user-service%20is%20down.png" alt="Order response while user-service is down"></p>
 
 Start the user service again:
 
@@ -925,7 +925,7 @@ docker compose start user-service
 docker compose down
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/mahiiabdullah/Poridhi-Labs/main/module-7/lab-2/images/docker%20compose%20down.png" alt="docker compose down"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/poridhioss/lab-asset/main/System-Design-Labs/Milestones/MileStone-02/Module-07/lab-02/images/docker%20compose%20down.png" alt="docker compose down"></p>
 
 Add `-v` to also remove the database volumes for a clean slate:
 
